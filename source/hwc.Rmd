@@ -24,6 +24,7 @@ library(rgdal)
 library(spData)
 library(here)
 library(lubridate)
+library(kableExtra)
 
 #install wallace
 library(wallace)
@@ -54,20 +55,20 @@ We chose to go forward with the function from Wallace.
 Gives global records.  If limit is set high, this function can take a while to run.
 
 ```{r}
-results <- spocc::occ(query = "Panthera leo", # scientific name, here we are using lions
+results <- spocc::occ(query = "Loxodonta africana (Blumenbach, 1797)", # scientific name, here we are using lions
                       from = "gbif", # set to records from https://www.gbif.org/
                       limit = 15000, # max number of records
                       has_coords = TRUE) # gets the lat/long for each observation
 
 # select just GBIF records, format the species name
-results[["gbif"]]$data[[formatSpName("Panthera leo")]]
+results[["gbif"]]$data[[formatSpName("Loxodonta africana")]]
 
 # select just the necessary information
-myspecies_coords <- as.data.frame(results$gbif$data$Panthera_leo) %>% # using GBIF data
+myspecies_coords <- as.data.frame(results$gbif$data$Loxodonta_africana) %>% # using GBIF data
   dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
-  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN"),
+  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
          occurrenceStatus == "PRESENT",
-        eventDate <= "2000-12-31" & eventDate >= "1970-01-01")
+        eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
 ```
 
 #### 2) Download using the occ_data function
@@ -76,7 +77,7 @@ Returns records for Africa only
 
 ```{r}
 #can use occ_data function for GBIF
- results_africa <- occ_data(scientificName = "Panthera leo",
+ results_africa <- occ_data(scientificName = "Loxodonta africana",
                        hasCoordinate = TRUE,
                        continent = "Africa")
 
@@ -154,7 +155,7 @@ intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
 
 # filters our occurrence data to those overlapping points
 occs <- myspecies_coords[intersect.rowNums, ] #again, change occs to myspecies_coords
-occs$name <- "Panthera leo"
+occs$name <- "Loxodonta africana"
 ```
 
 #### In case you want to create a map figure to double check everything
@@ -181,7 +182,7 @@ This will remove occurrence points that are within a specified distance from one
 # just doing 10 replicates for now, thinning to 10 km
 output <- spThin::thin(occs, 'latitude', 'longitude', 'name', 
                        thin.par = 10, # thinned to 10 km
-                       reps = 5, # default on Wallace is 100, but run time is long, so a low number is good for testing
+                       reps = 10, # default on Wallace is 100, but run time is long, so a low number is good for testing
                        locs.thinned.list.return = TRUE, 
                        write.files = FALSE, 
                        verbose = FALSE)
@@ -195,10 +196,10 @@ maxThin <- output[[ifelse(length(maxThin) > 1, maxThin[1], maxThin)]]
 # subset data to those thinned records
 occs <- occs[as.numeric(rownames(maxThin)),]
 
-# # save occs to upload to Wallace if needed
-#      occs_wallace <- occs %>% 
-#        dplyr::select(name, longitude, latitude) # change order to match
-#      write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/bioclim_points_thinned.csv")
+# save occs to upload to Wallace if needed
+      occs_wallace <- occs %>% 
+        dplyr::select(name, longitude, latitude) # change order to match
+      write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/sav_elephant_chelsa_points_thinned.csv")
 ```
 
 
@@ -324,8 +325,21 @@ afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC/R_files/R_input_data/wwf_e
 #check crs
 crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
 
-#get csv for wallace
-write_csv(afrotropical_region, "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.csv")
+#get csv for wallace (wrong format?)
+# write_csv(afrotropical_region, "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.csv")
+
+#put geometry into longitude and latitude columns for wallace
+afrotropical_region_lat_lon <- tidyr::extract(afrotropical_region, geometry, into = c('latitude', 'longitude'), '\\((.*),(.*)\\)', conv = T)
+
+#remove all columns except lat, lon, and geometry
+afrotropical_region_lat_lon_sub <- afrotropical_region_lat_lon[, -c(1:22, 25)]
+
+# get csv for wallace
+# write_csv(afrotropical_region_lat_lon_sub, "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region_lat_lon_sub.csv")
+
+# create shapefile for wallace
+# st_write(afrotropical_region, dsn = "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", layer = "afrotropical_region.shp", driver = "ESRI Shapefile")
+
 
 # cropping to extent of Africa spatial polygon
 bioclim_crop <- raster::crop(bioclim_data_v2, afrotropical_region)
@@ -363,51 +377,22 @@ lion_cleaned <- #coord_incomplete(coord_imprecise(coord_impossible(coord_unlikel
 lat_long <- lion_cleaned %>%
   dplyr::select(lat, long)
 
+bioclim_crop_4326 <- projectRaster(bioclim_crop,
+                                       crs = 4326)
+
 # Save lat/long
  # write_csv(lat_long, "H:/My Drive/HWC/R_files/R_output_data/lat_lon/bioclim_lion_coords.csv")
            
 # Download full raster layer for each bioclim variable for Maxent (may use in conjunction with bias layer)
-bio <- c(1:19) #vector for each bioclim variable
-for(i in bio){
-        # Maxent reads either csv files or a directory -> need to export each bioclim raster separately
-        writeRaster(bioclim_crop[[i]], 
-                    filename = paste0("H:/My Drive/HWC/R_files/R_output_data/bioclim_v2/bio", i, ".asc"),
-                    overwrite=TRUE)
-}
+ bio <- c(1:19) #vector for each bioclim variable
+ for(i in bio){
+         # Maxent reads either csv files or a directory -> need to export each bioclim raster separately
+         writeRaster(bioclim_crop[[i]], 
+                     filename = paste0("H:/My Drive/HWC/R_files/R_output_data/bioclim_v2/bio", i, ".asc"),
+                     overwrite=TRUE)
+ }
 ```
 
-### Land Cover Data
-
-Downloaded from: http://due.esrin.esa.int/page_globcover.php
-
-Reclassified following 
-
-```{r}
-#import downloaded ESA GlobCover 2009 file
-land <- here("data", "Globcover2009_V2.3_Global_", "GLOBCOVER_L4_200901_200912_V2.3.tif")
-land = raster(land)
-
-#crop to Africa polygon
-land_crop <- crop(land, africa_spatial)
-
-# create land cover class values matrix for reclassification (see GlobCover2009_Legend.xls in downloaded cover data for id values and corresponding cover labels)
-mtrx <- rbind(c(0, 21, 1), c(22, 91, 2), c(92, 101, 3), c(102, 121, 4), c(122, 161, 3),
-              c(162, 171, 2), c(172, 181, 3), c(182, 260, 5)) #why don't values match spreadsheet?
-
-#reclassify to broader categories: ag, grassland, forest, etc.
-mtrx_test <- rbind(c(11, 14, 1), c(20, 30, 2), c(40, 50, 3), c(60, 70, 4), c(90, 100, 3),
-              c(110, 120, 2), c(130, 140, 3), c(150, 160, 5)) #see if it works with matching values
-
-land_rcl <- reclassify(land_crop, mtrx)
-
-#crop to same extent as other layers for maxent
-#land_rcl <- crop(land_rcl, bioclim_data, snap = "near") 
-land_rcl <- crop(land_crop, bioclim_data, snap = "near") #changed land_rcl to land_crop for now since land_rcl isn't working
-land_rcl <- raster::resample(land_rcl, bio_new[[1]], method = "ngb")
-
-#write raster
-writeRaster(land_rcl, "C:/Users/roshn/OneDrive/Desktop/emLab/hwc/maxent_SWD/bio_layers/bias_extent/esa_landcover.asc", format="ascii", overwrite = T)
-```
 
 ### SPECIES WITH DATA METHOD
 
@@ -428,22 +413,43 @@ occ_extract_final <- as.data.frame(occ_extract) %>%
   mutate(longitude = occs.xy$longitude) %>% 
   mutate(species = "Panthera leo") %>% # adding species column
   dplyr::select(species, longitude, latitude, 1:19) # using select() to re-order columns
+# 
+# occ_extract_final_bio_sub <- occ_extract_final %>% 
+#   dplyr::select(species, longitude, latitude, wc2.1_2.5m_bio_1, wc2.1_2.5m_bio_2, wc2.1_2.5m_bio_5, wc2.1_2.5m_bio_6, wc2.1_2.5m_bio_12, wc2.1_2.5m_bio_13, wc2.1_2.5m_bio_14) %>% 
+#   summarize(mean = mean(wc2.1_2.5m_bio_1))
 
-occ_extract_final_bio_sub <- occ_extract_final %>% 
+# for running correlation test
+occ_extract_final_bio_sub_only <- occ_extract_final %>% 
   dplyr::select(wc2.1_2.5m_bio_1, wc2.1_2.5m_bio_2, wc2.1_2.5m_bio_5, wc2.1_2.5m_bio_6, wc2.1_2.5m_bio_12, wc2.1_2.5m_bio_13, wc2.1_2.5m_bio_14)
 
 library(Hmisc)
-occ_extract_final_bio_sub_matrix <- as.matrix(occ_extract_final_bio_sub)
+occ_extract_final_bio_sub_matrix <- as.matrix(occ_extract_final_bio_sub_only)
 rcorr(occ_extract_final_bio_sub_matrix, type="pearson") # type can be pearson or spearman
 
-# d2 <- occ_extract_final_bio_sub %>% 
-#   as.matrix %>%
-#   cor %>%
-#   as.data.frame %>%
-#   rownames_to_column(var = 'var1') %>%
-#   gather(var2, value, -var1)
-# 
-# d2
+# get means 
+chelsa_means <- colMeans(occ_extract_final_bio_sub_only, na.rm=TRUE)
+chelsa_means_df <- data.frame(chelsa_means)
+# write_csv(chelsa_means_df, "H:/My Drive/HWC/R_files/R_output_data/bioclim_variable_means/chelsa_pts_means.csv")
+
+# get standard deviations
+chelsa_sd <- occ_extract_final_bio_sub_only %>% 
+summarise_if(is.numeric, sd, na.rm=TRUE)
+# write_csv(chelsa_sd, "H:/My Drive/HWC/R_files/R_output_data/bioclim_variable_means/chelsa_pts_sd.csv")
+
+# read in csv of 3 groups means and SDs
+means_sds <- read_csv("H:/My Drive/HWC/R_files/R_output_data/bioclim_variable_means/combined_means_sd.csv")
+
+kable(means_sds,
+      col.names = c("Bioclim Variable", 
+                    "All points means", 
+                    "Bioclim means", 
+                    "Chelsa means",
+                    "All points sd", 
+                    "Bioclim sd",
+                    "Chelsa sd")) %>% 
+  #row_spec(6, bold = T, color = "white", background = "green") %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = FALSE)
 
 bg_extract_final <- as.data.frame(bg_extract) %>% 
   mutate(x = bg.xy$x) %>% 
@@ -505,6 +511,38 @@ writeRaster(r5, "C:/Users/roshn/OneDrive/Desktop/HWC/HWC/data/chelsa_asc/chelsa_
 # }
 ```
 
+### Land Cover Data - not doing for now
+
+Downloaded from: http://due.esrin.esa.int/page_globcover.php
+
+Reclassified following 
+
+```{r}
+#import downloaded ESA GlobCover 2009 file
+land <- here("data", "Globcover2009_V2.3_Global_", "GLOBCOVER_L4_200901_200912_V2.3.tif")
+land = raster(land)
+
+#crop to Africa polygon
+land_crop <- crop(land, africa_spatial)
+
+# create land cover class values matrix for reclassification (see GlobCover2009_Legend.xls in downloaded cover data for id values and corresponding cover labels)
+mtrx <- rbind(c(0, 21, 1), c(22, 91, 2), c(92, 101, 3), c(102, 121, 4), c(122, 161, 3),
+              c(162, 171, 2), c(172, 181, 3), c(182, 260, 5)) #why don't values match spreadsheet?
+
+#reclassify to broader categories: ag, grassland, forest, etc.
+mtrx_test <- rbind(c(11, 14, 1), c(20, 30, 2), c(40, 50, 3), c(60, 70, 4), c(90, 100, 3),
+              c(110, 120, 2), c(130, 140, 3), c(150, 160, 5)) #see if it works with matching values
+
+land_rcl <- reclassify(land_crop, mtrx)
+
+#crop to same extent as other layers for maxent
+#land_rcl <- crop(land_rcl, bioclim_data, snap = "near") 
+land_rcl <- crop(land_crop, bioclim_data, snap = "near") #changed land_rcl to land_crop for now since land_rcl isn't working
+land_rcl <- raster::resample(land_rcl, bio_new[[1]], method = "ngb")
+
+#write raster
+writeRaster(land_rcl, "C:/Users/roshn/OneDrive/Desktop/emLab/hwc/maxent_SWD/bio_layers/bias_extent/esa_landcover.asc", format="ascii", overwrite = T)
+```
 
 
 ### Bias Layers
