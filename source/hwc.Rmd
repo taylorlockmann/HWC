@@ -55,20 +55,33 @@ We chose to go forward with the function from Wallace.
 Gives global records.  If limit is set high, this function can take a while to run.
 
 ```{r}
-results <- spocc::occ(query = "Loxodonta africana (Blumenbach, 1797)", # scientific name, here we are using lions
+#two names for same elephant species (forest elephant, Loxodonta cyclotis), bring in both and then combine
+results_1 <- spocc::occ(query = "Loxodonta cyclotis (Matschie, 1900)",
+                      from = "gbif", # set to records from https://www.gbif.org/
+                      limit = 15000, # max number of records
+                      has_coords = TRUE) # gets the lat/long for each observation
+
+results_2 <- spocc::occ(query = "Loxodonta africana subsp. cyclotis (Matschie, 1900)",
                       from = "gbif", # set to records from https://www.gbif.org/
                       limit = 15000, # max number of records
                       has_coords = TRUE) # gets the lat/long for each observation
 
 # select just GBIF records, format the species name
-results[["gbif"]]$data[[formatSpName("Loxodonta africana")]]
+results_1[["gbif"]]$data[[formatSpName("Loxodonta cyclotis")]]
+results_2[["gbif"]]$data[[formatSpName("Loxodonta cyclotis")]]
 
 # select just the necessary information
-myspecies_coords <- as.data.frame(results$gbif$data$Loxodonta_africana) %>% # using GBIF data
+myspecies_coords <- as.data.frame(results_1$gbif$data$Loxodonta_africana) %>% # using GBIF data
   dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
   filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
-         occurrenceStatus == "PRESENT",
-        eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
+         occurrenceStatus == "PRESENT")
+        #eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
+
+myspecies_coords <- as.data.frame(results_2$gbif$data$Loxodonta_africana) %>% # using GBIF data
+  dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
+  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
+         occurrenceStatus == "PRESENT")
+        #eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
 ```
 
 #### 2) Download using the occ_data function
@@ -199,7 +212,7 @@ occs <- occs[as.numeric(rownames(maxThin)),]
 # save occs to upload to Wallace if needed
       occs_wallace <- occs %>% 
         dplyr::select(name, longitude, latitude) # change order to match
-      write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/sav_elephant_chelsa_points_thinned.csv")
+      write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/sav_elephant_all_points_thinned.csv")
 ```
 
 
@@ -325,23 +338,10 @@ afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC/R_files/R_input_data/wwf_e
 #check crs
 crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
 
-#get csv for wallace (wrong format?)
-# write_csv(afrotropical_region, "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.csv")
-
-#put geometry into longitude and latitude columns for wallace
-afrotropical_region_lat_lon <- tidyr::extract(afrotropical_region, geometry, into = c('latitude', 'longitude'), '\\((.*),(.*)\\)', conv = T)
-
-#remove all columns except lat, lon, and geometry
-afrotropical_region_lat_lon_sub <- afrotropical_region_lat_lon[, -c(1:22, 25)]
-
-# get csv for wallace
-# write_csv(afrotropical_region_lat_lon_sub, "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region_lat_lon_sub.csv")
-
 # create shapefile for wallace
 # st_write(afrotropical_region, dsn = "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", layer = "afrotropical_region.shp", driver = "ESRI Shapefile")
 
-
-# cropping to extent of Africa spatial polygon
+# cropping bioclim variables to extent of Africa spatial polygon
 bioclim_crop <- raster::crop(bioclim_data_v2, afrotropical_region)
 
 # double checking to see they line up
@@ -377,7 +377,16 @@ lion_cleaned <- #coord_incomplete(coord_imprecise(coord_impossible(coord_unlikel
 lat_long <- lion_cleaned %>%
   dplyr::select(lat, long)
 
-bioclim_crop_4326 <- projectRaster(bioclim_crop,
+#add crs to bioclim variables for Wallace
+ bio <- c(1:19) #vector for each bioclim variable
+ for(i in bio){
+         # Maxent reads either csv files or a directory -> need to export each bioclim raster separately
+         writeRaster(bioclim_crop[[i]], 
+                     filename = paste0("H:/My Drive/HWC/R_files/R_output_data/bioclim_v2/bio", i, ".asc"),
+                     overwrite=TRUE)
+ }
+ 
+bioclim_crop_4326 <- projectRaster(bioclim_crop[[i]],
                                        crs = 4326)
 
 # Save lat/long
