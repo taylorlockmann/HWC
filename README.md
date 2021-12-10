@@ -1,6 +1,5 @@
 # Human Wildlife Conflict Project
-## Created by Roshni Katrak-Adefowora and Taylor Lockmann
-## Arnhold Environmental Graduate Fellow Program
+### Created by Roshni Katrak-Adefowora and Taylor Lockmann for the Arnhold Environmental Graduate Fellow Program
 
 
 ### **See  Fall 2021 Reproducibility folder for updated project code:**
