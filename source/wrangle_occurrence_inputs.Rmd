@@ -28,36 +28,24 @@ library(kableExtra)
 
 #install wallace
 library(wallace)
-#run_wallace()
 
 #load Wallace functions
 source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
 ```
 
-# This does not need to be run again unless we're changing the input settings to create and thin our occurrence data. All occurrence results are saved as csv's and can be read in in the other Rmd.
+# This does not need to be run again unless we're changing the input settings to create and thin our occurrence data. All occurrence results are saved as csv's and can be read in with the other Rmd.
 
 ## Description:
 
-This markdown file outlines methods that can be used to create data for species distribution modeling (SDM) with the Maxent GUI.
-
-The Maxent GUI can be run two different ways:
-
-  1) Using samples with data (SWD) where you extract the climate data from the bioclim rasters for each occurrence and background point.
-  
-  2) Using lat/long for each point and the bioclim rasters.
+This markdown file outlines the first steps for creating data for species distribution modeling (SDM) with Wallace.
 
 ### Download species occurence data and get coordinates
 
-For both steps, you will need to begin by downloading the species occurrence points, which can be done 3 different ways 1) with the function from Wallace, 2) with the function from the rgbif packages, or 3) by downloading from gbif.org itself.
-
-We chose to go forward with the function from Wallace.
-
-#### 1) Download using Wallace's spocc:occ() function
-
-Gives global records.  If limit is set high, this function can take a while to run. Choose chunk to run based on species.
+We begin by downloading the species occurrence points for the African lion, African savanna elephant, and African forest elephant using Wallace's spocc:occ() function. Choose which chunk to run based on the species of interest.
 
 African Lion
 ```{r}
+# Gives global records.  If limit is set high, this function can take a while to run.
 results <- spocc::occ(query = "Panthera leo", # scientific name, here we are using lions
                       from = "gbif", # set to records from https://www.gbif.org/
                       limit = 15000, # max number of records
@@ -70,12 +58,13 @@ results[["gbif"]]$data[[formatSpName("Panthera leo")]]
 myspecies_coords <- as.data.frame(results$gbif$data$Panthera_leo) %>% # using GBIF data
   dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
   filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
-         occurrenceStatus == "PRESENT")
-        #eventDate <= "2010-12-31" & eventDate >= "1981-01-01") #change this depending on whether we're using all occurrence points, just 1970-2000 (for bioclim variables), or just 1981-2010 (for chelsa variables)
+         occurrenceStatus == "PRESENT",
+        eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
 ```
 
-Savanna Elephant
+African Savanna Elephant
 ```{r}
+# Gives global records.  If limit is set high, this function can take a while to run.
 results <- spocc::occ(query = "Loxodonta africana (Blumenbach, 1797)", # scientific name, here we are using lions
                       from = "gbif", # set to records from https://www.gbif.org/
                       limit = 15000, # max number of records
@@ -88,38 +77,27 @@ results[["gbif"]]$data[[formatSpName("Loxodonta africana")]]
 myspecies_coords <- as.data.frame(results$gbif$data$Loxodonta_africana) %>% # using GBIF data
   dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
   filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
-         occurrenceStatus == "PRESENT")
-       # eventDate <= "2010-12-31" & eventDate >= "1981-01-01") #change this depending on whether we're using all occurrence points, just 1970-2000 (for bioclim variables), or just 1981-2010 (for chelsa variables)
+         occurrenceStatus == "PRESENT",
+        eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
 ```
 
-Forest Elephant
+African Forest Elephant
 ```{r}
+# Gives global records.  If limit is set high, this function can take a while to run.
 results <- spocc::occ(query = "Loxodonta cyclotis",
                       from = "gbif", # set to records from https://www.gbif.org/
                       limit = 15000, # max number of records
                       has_coords = TRUE) # gets the lat/long for each observation
 
-results_2 <- spocc::occ(query = "Loxodonta africana subsp. cyclotis (Matschie, 1900)",
-                      from = "gbif", # set to records from https://www.gbif.org/
-                      limit = 15000, # max number of records
-                      has_coords = TRUE) # gets the lat/long for each observation
-
 # select just GBIF records, format the species name
-results_1[["gbif"]]$data[[formatSpName("Loxodonta cyclotis")]]
-results_2[["gbif"]]$data[[formatSpName("Loxodonta_africana_subsp_cyclotis")]]
+results[["gbif"]]$data[[formatSpName("Loxodonta cyclotis")]]
 
 # select just the necessary information
-myspecies_coords_1 <- as.data.frame(results_1$gbif$data$Loxodonta_cyclotis) %>% # using GBIF data
+myspecies_coords <- as.data.frame(results$gbif$data$Loxodonta_cyclotis) %>% # using GBIF data
   dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
   filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
-         occurrenceStatus == "PRESENT")
-        #eventDate <= "2010-12-31" & eventDate >= "1981-01-01") #change this depending on whether we're using all occurrence points, just 1970-2000 (for bioclim variables), or just 1981-2010 (for chelsa variables)
-
-myspecies_coords_2 <- as.data.frame(results_2$gbif$data$Loxodonta_cyclotis) # using GBIF data
-  dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
-  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
-         occurrenceStatus == "PRESENT")
-        #eventDate <= "2010-12-31" & eventDate >= "1981-01-01") #change this depending on whether we're using all occurrence points, just 1970-2000 (for bioclim variables), or just 1981-2010 (for chelsa variables)
+         occurrenceStatus == "PRESENT",
+         eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
 ```
 
 ### Clean Data
@@ -135,18 +113,6 @@ myspecies_coords$longitude <- as.numeric(myspecies_coords$longitude)
 
 # give all records a unique ID
 myspecies_coords$occID <- row.names(myspecies_coords)
-
-# removing unlikely, imprecise, incomplete, and impossible coordinates - doesn't run
-#occs <- coord_incomplete(coord_imprecise(coord_impossible(coord_unlikely(myspecies_coords))))
-
-# # save lat/long points as a csv if needed
-# occs_cleaned <- coord_incomplete(coord_imprecise(coord_impossible(coord_unlikely(myspecies_coords))))%>%
-#   rename(lat = latitude) %>% # renaming lat/long so it works with projection later on?
-#   rename(long = longitude)
-# lat_long <- lion_cleaned %>% 
-#   dplyr::select(lat, long)
-# 
-# write_csv(lat_long, "occs_cleaned_coords.csv")
 ```
 
 ### Crop data using Africa boundary
@@ -155,44 +121,33 @@ We decided to use a shapefile of Africa instead of selecting with a polygon on W
 
 ```{r}
 #get spatial extent using Afrotropical ecoregion from WWF. Data downloaded from https://www.worldwildlife.org/publications/terrestrial-ecoregions-of-the-world
-afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC/R_files/R_input_data/wwf_ecoregions/official", layer = "wwf_terr_ecos") %>% 
-  filter(REALM == "AT")
-
-#check crs
-crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
+# afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC/R_files/R_input_data/wwf_ecoregions/official", layer = "wwf_terr_ecos") %>% 
+#   filter(REALM == "AT")
+# 
+# #check crs
+# crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
 
 # create shapefile for wallace
 # st_write(afrotropical_region, dsn = "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", layer = "afrotropical_region.shp", driver = "ESRI Shapefile")
 
-# load world data from spData package
-world_sp <-  as(world, "Spatial")
-world_sf <-  st_as_sf(world_sp, "sf")
-
-# filter countries to just those in Africa (removing Madagascar)
-africa <- world_sf %>% 
-  filter(continent == "Africa") %>% 
-  filter(name_long != "Madagascar") %>% 
-  dplyr::select(name_long)
-
-# merge all the country polygons to create one large continental polygon
-africa_2 <- st_combine(africa)
+afrotropical_region_sp <- st_read("H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp")
 
 # convert to a spatial polygon
-africa_spatial <- as_Spatial(africa_2, cast = TRUE)
+afrotropical_region_spatial <- as_Spatial(afrotropical_region_sp, cast = TRUE)
 
 # creates new data frame with observation data lat/long points
-occs.xy <- myspecies_coords[c('longitude', 'latitude')] #change occs to myspecies_coords for now since can't install "scrubr"
+occs.xy <- myspecies_coords[c('longitude', 'latitude')]
 
 # convert species data to spatial layer
 coordinates(occs.xy) <- ~longitude+latitude
 projection(occs.xy) <- CRS('+proj=longlat +datum=WGS84')
 
 # double-check that polygon and points have the same projection
-crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
+crs(afrotropical_region_spatial) # +proj=longlat +datum=WGS84 +no_defs 
 crs(occs.xy) # +proj=longlat +datum=WGS84 +no_defs 
 
 # overlays those points over the polygon
-intersect <- sp::over(occs.xy, afrotropical_region)
+intersect <- sp::over(occs.xy, afrotropical_region_spatial)
 # could also use 
 # raster::crop(occs.xy, africa_spatial)
 
@@ -200,9 +155,44 @@ intersect <- sp::over(occs.xy, afrotropical_region)
 intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
 
 # filters our occurrence data to those overlapping points
-occs <- myspecies_coords[intersect.rowNums, ] #again, change occs to myspecies_coords
-occs$name <- "Loxodonta africana" #change depending on the species!
+occs <- myspecies_coords[intersect.rowNums, ] %>% #again, change occs to myspecies_coords
+  drop_na(longitude, latitude)
+occs$name <- "Panthera leo" #change depending on the species!
 ```
+
+```{r}
+# load world data from spData package
+world_sp <-  as(world, "Spatial")
+world_sf <-  st_as_sf(world_sp, "sf")
+# filter countries to just those in Africa (removing Madagascar)
+africa <- world_sf %>% 
+  filter(continent == "Africa") %>% 
+  filter(name_long != "Madagascar") %>% 
+  dplyr::select(name_long)
+# merge all the country polygons to create one large continental polygon
+africa_2 <- st_combine(africa)
+# convert to a spatial polygon
+africa_spatial <- as_Spatial(africa_2, cast = TRUE)
+# creates new data frame with observation data lat/long points
+occs.xy <- myspecies_coords[c('longitude', 'latitude')] #change occs to myspecies_coords for now since can't install "scrubr"
+# convert species data to spatial layer
+coordinates(occs.xy) <- ~longitude+latitude
+projection(occs.xy) <- CRS('+proj=longlat +datum=WGS84')
+# double-check that polygon and points have the same projection
+crs(africa_spatial) # +proj=longlat +datum=WGS84 +no_defs 
+crs(occs.xy) # +proj=longlat +datum=WGS84 +no_defs 
+# overlays those points over the polygon
+intersect <- sp::over(occs.xy, africa_spatial)
+# could also use 
+# raster::crop(occs.xy, africa_spatial)
+# removes na values, so selects for points where they overlap the focal polygon
+intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
+# filters our occurrence data to those overlapping points
+occs <- myspecies_coords[intersect.rowNums, ] #again, change occs to myspecies_coords
+occs$name <- "Panthera leo"
+```
+
+
 
 #### In case you want to create a map figure to double check everything
 ```{r}
@@ -212,8 +202,8 @@ occs$name <- "Loxodonta africana" #change depending on the species!
 
 # run plot and points function at once
 plot(wrld_simpl, 
-     xlim = range(occs$long),
-     ylim = range(occs$lat), 
+     xlim = range(occs$long, na.rm=TRUE),
+     ylim = range(occs$lat, na.rm=TRUE), 
      axes = TRUE, 
      col = "light yellow"
      )
@@ -243,9 +233,10 @@ maxThin <- output[[ifelse(length(maxThin) > 1, maxThin[1], maxThin)]]
 occs <- occs[as.numeric(rownames(maxThin)),]
 
 # save occs to upload to Wallace if needed
-      occs_wallace <- occs %>% 
-        dplyr::select(name, longitude, latitude) # change order to match
-      write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/sav_elephant_all_points_thinned.csv")
+         occs_wallace <- occs %>% 
+           dplyr::select(name, longitude, latitude) # change order to match
+
+# write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/lion_chelsa_points_thinned.csv")
 ```
 
 
@@ -258,44 +249,10 @@ occs <- occs[as.numeric(rownames(maxThin)),]
 
 # run plot and points function at once
 plot(wrld_simpl, 
-     xlim = range(occs$long),
-     ylim = range(occs$lat), 
+     xlim = range(occs$long, na.rm=TRUE),
+     ylim = range(occs$lat, na.rm=TRUE), 
      axes = TRUE, 
      col = "light yellow"
      )
 points(occs$longitude, occs$latitude, col = 'blue', pch = 20, cex = 0.75) #add the points
-```
-
-### Load worldclim data and afrotropical region
-
-```{r}
-#read in worldclim version 2 data
-rastlist <- list.files(path = "H:/My Drive/HWC/R_files/R_input_data/wc2.1_2.5m_bio", pattern='.tif$', full.names=TRUE)
-bioclim_data_v2 <- stack(rastlist)
-
-#get spatial extent using Afrotropical ecoregion from WWF. Data downloaded from https://www.worldwildlife.org/publications/terrestrial-ecoregions-of-the-world
-afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC/R_files/R_input_data/wwf_ecoregions/official", layer = "wwf_terr_ecos") %>% 
-  filter(REALM == "AT")
-
-#check crs
-crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
-
-# create shapefile for wallace
-# st_write(afrotropical_region, dsn = "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", layer = "afrotropical_region.shp", driver = "ESRI Shapefile")
-
-# cropping bioclim variables to extent of Africa spatial polygon
-bioclim_crop <- raster::crop(bioclim_data_v2, afrotropical_region)
-
-# double checking to see they line up
-plot(bioclim_crop[[1]])
-plot(buffer_points, add = TRUE)
-
-# extract environmental values at occ grid cells
-locs.vals <- raster::extract(bioclim_crop[[1]], occs[, c('longitude', 'latitude')])
-
-bioclim_selected <- raster::subset(bioclim_crop, c("wc2.1_2.5m_bio_1", "wc2.1_2.5m_bio_2", "wc2.1_2.5m_bio_5", "wc2.1_2.5m_bio_6", "wc2.1_2.5m_bio_12", "wc2.1_2.5m_bio_13", "wc2.1_2.5m_bio_14"))
-
-bioclim_selected_extract <- raster::extract(bioclim_crop[[1]], occs[, c('longitude', 'latitude')])
-# remove occs without environmental values
-occs_ <- occs[!is.na(bioclim_selected_extract), ]
 ```
