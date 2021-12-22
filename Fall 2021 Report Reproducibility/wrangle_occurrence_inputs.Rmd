@@ -15,7 +15,6 @@ library(maptools)
 library(dismo)
 library(rgeos)
 library(viridis)
-#library(scrubr)
 library(raster)
 library(DHARMa)
 library(spocc)
@@ -37,7 +36,7 @@ source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
 
 ## Description:
 
-This markdown file outlines the first steps for creating data for species distribution modeling (SDM) with Wallace.
+This markdown file outlines the first steps for creating data for species distribution modeling (SDM) with Wallace. Here, we create a csv of occurrence points for each species of interest (African lion, African savanna elephant, and African forest elephant). Occurrence points were downloaded from GBIF, cropped to our study area boundary (Afrotropical region), and spatially thinned.
 
 ### Download species occurence data and get coordinates
 
@@ -100,7 +99,7 @@ myspecies_coords <- as.data.frame(results$gbif$data$Loxodonta_cyclotis) %>% # us
          eventDate <= "2010-12-31" & eventDate >= "1981-01-01")
 ```
 
-### Clean Data
+### Clean data
 
 ```{r}
 # remove rows with duplicate coordinates
@@ -117,7 +116,7 @@ myspecies_coords$occID <- row.names(myspecies_coords)
 
 ### Crop data using Africa boundary
 
-We decided to use a shapefile of Africa instead of selecting with a polygon on Wallace because it's easier and cleaner.
+We created a shapefile of the Afrotropical region, which we cropped the occurrence points to. The shapefile was read into Wallace. We decided to use a shapefile of Africa instead of selecting with a polygon on Wallace because it's easier and cleaner.
 
 ```{r}
 #get spatial extent using Afrotropical ecoregion from WWF. Data downloaded from https://www.worldwildlife.org/publications/terrestrial-ecoregions-of-the-world
@@ -149,7 +148,7 @@ crs(occs.xy) # +proj=longlat +datum=WGS84 +no_defs
 # overlays those points over the polygon
 intersect <- sp::over(occs.xy, afrotropical_region_spatial)
 # could also use 
-# raster::crop(occs.xy, africa_spatial)
+# raster::crop(occs.xy, afrotropical_region_spatial)
 
 # removes na values, so selects for points where they overlap the focal polygon
 intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
@@ -157,44 +156,11 @@ intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
 # filters our occurrence data to those overlapping points
 occs <- myspecies_coords[intersect.rowNums, ] %>% #again, change occs to myspecies_coords
   drop_na(longitude, latitude)
-occs$name <- "Panthera leo" #change depending on the species!
+occs$name <- "Loxodonta africana" #change depending on the species!
 ```
 
-```{r}
-# load world data from spData package
-world_sp <-  as(world, "Spatial")
-world_sf <-  st_as_sf(world_sp, "sf")
-# filter countries to just those in Africa (removing Madagascar)
-africa <- world_sf %>% 
-  filter(continent == "Africa") %>% 
-  filter(name_long != "Madagascar") %>% 
-  dplyr::select(name_long)
-# merge all the country polygons to create one large continental polygon
-africa_2 <- st_combine(africa)
-# convert to a spatial polygon
-africa_spatial <- as_Spatial(africa_2, cast = TRUE)
-# creates new data frame with observation data lat/long points
-occs.xy <- myspecies_coords[c('longitude', 'latitude')] #change occs to myspecies_coords for now since can't install "scrubr"
-# convert species data to spatial layer
-coordinates(occs.xy) <- ~longitude+latitude
-projection(occs.xy) <- CRS('+proj=longlat +datum=WGS84')
-# double-check that polygon and points have the same projection
-crs(africa_spatial) # +proj=longlat +datum=WGS84 +no_defs 
-crs(occs.xy) # +proj=longlat +datum=WGS84 +no_defs 
-# overlays those points over the polygon
-intersect <- sp::over(occs.xy, africa_spatial)
-# could also use 
-# raster::crop(occs.xy, africa_spatial)
-# removes na values, so selects for points where they overlap the focal polygon
-intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
-# filters our occurrence data to those overlapping points
-occs <- myspecies_coords[intersect.rowNums, ] #again, change occs to myspecies_coords
-occs$name <- "Panthera leo"
-```
+#### Plot occurrence points on map
 
-
-
-#### In case you want to create a map figure to double check everything
 ```{r}
 # world map example
 
@@ -236,11 +202,11 @@ occs <- occs[as.numeric(rownames(maxThin)),]
          occs_wallace <- occs %>% 
            dplyr::select(name, longitude, latitude) # change order to match
 
-# write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/lion_chelsa_points_thinned.csv")
+write_csv(occs_wallace, "H:/My Drive/HWC/R_files/R_output_data/occurrence_points/savanna_elephant_chelsa_points_thinned.csv")
 ```
 
 
-###Plot again (thinned points)
+### Plot again (thinned points)
 
 ```{r}
 # world map example
@@ -249,10 +215,10 @@ occs <- occs[as.numeric(rownames(maxThin)),]
 
 # run plot and points function at once
 plot(wrld_simpl, 
-     xlim = range(occs$long, na.rm=TRUE),
-     ylim = range(occs$lat, na.rm=TRUE), 
+     xlim = range(occs_wallace$long, na.rm=TRUE),
+     ylim = range(occs_wallace$lat, na.rm=TRUE), 
      axes = TRUE, 
      col = "light yellow"
      )
-points(occs$longitude, occs$latitude, col = 'blue', pch = 20, cex = 0.75) #add the points
+points(occs_wallace$longitude, occs_wallace$latitude, col = 'blue', pch = 20, cex = 0.75) #add the points
 ```
