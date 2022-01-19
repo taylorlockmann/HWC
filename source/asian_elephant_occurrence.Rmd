@@ -20,11 +20,13 @@ library(raster)
 #library(DHARMa) # something is wrong when I try to install/load
 library(spocc)
 library(sf)
+library(sp)
 library(rgdal)
 library(spData)
 library(here)
 library(lubridate)
 library(kableExtra)
+library(tmap)
 
 #install wallace
 library(wallace)
@@ -129,14 +131,100 @@ maximus_coords$occID <- row.names(maximus_coords)
 sumatranus_coords$occID <- row.names(sumatranus_coords)
 ```
 
-
 Map occurrence data
-```{r}
 
+Indian Elephant
+```{r}
+tmap_mode(mode = "view")
+
+indicus_xy <- indicus_coords[c('longitude', 'latitude')] 
+
+indicus_coords_sf <- st_as_sf(x = indicus_xy,
+                              coords = c("longitude", "latitude"),
+                              crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+
+world_asia <- world[world[["continent"]] == "Asia", ]
+
+indicus_map <- 
+  #tm_shape(world_asia) +
+    #tm_polygons(style = "pretty") +
+  tm_shape(indicus_coords_sf) +
+    tm_symbols(col = "red",
+               size = 0.05,
+               alpha = 0.9) 
+  #tm_layout(inner.margins = c(0.1, 0.1, 0.1, 0.1), # margins between 0-1 (bottom, left, top, right)
+            #legend.title.size = 1,
+            #legend.text.size = .8,
+            #bg.color = "lightblue", # background color
+            #title = "Indian Elephant subspecies in Asia") + # map title lives under tm_layouts
+  #tm_compass(type = "4star", # other compass styles available
+            #show.labels = 1, # specifies compass label options
+            #size = 4,
+            #position = c("left", "bottom"))
+
+indicus_map
 ```
 
+Sri Lankan Elephant
+```{r}
+maximus_xy <- maximus_coords[c('longitude', 'latitude')] 
 
+maximus_coords_sf <- st_as_sf(x = maximus_xy,
+                              coords = c("longitude", "latitude"),
+                              crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
 
+world_asia <- world[world[["continent"]] == "Asia", ]
 
+maximus_map <- 
+  tm_shape(world_asia) +
+    tm_polygons(col = "darkseagreen3",
+                style = "pretty") +
+  tm_shape(maximus_coords_sf) +
+    tm_symbols(col = "red",
+               size = 0.1,
+               alpha = 0.9) +
+  tm_layout(inner.margins = c(0.1, 0.1, 0.1, 0.1), # margins between 0-1 (bottom, left, top, right)
+            legend.title.size = 1,
+            legend.text.size = .8,
+            bg.color = "lightblue", # background color
+            title = "Sri Lankan Elephant subspecies in Asia") + # map title lives under tm_layouts
+  tm_compass(type = "4star", # other compass styles available
+            show.labels = 1, # specifies compass label options
+            size = 4,
+            position = c("left", "bottom"))
+
+maximus_map
+```
+
+Sumatran Elephant
+```{r}
+sumatranus_xy <- sumatranus_coords[c('longitude', 'latitude')] 
+
+sumatranus_coords_sf <- st_as_sf(x = sumatranus_xy,
+                              coords = c("longitude", "latitude"),
+                              crs = "+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
+
+world_asia <- world[world[["continent"]] == "Asia", ]
+
+sumatranus_map <- 
+  tm_shape(world_asia) +
+    tm_polygons(col = "darkseagreen3",
+                style = "pretty") +
+  tm_shape(sumatranus_coords_sf) +
+    tm_symbols(col = "red",
+               size = 0.1,
+               alpha = 0.9) +
+  tm_layout(inner.margins = c(0.1, 0.1, 0.1, 0.1), # margins between 0-1 (bottom, left, top, right)
+            legend.title.size = 1,
+            legend.text.size = .8,
+            bg.color = "lightblue", # background color
+            title = "Sumatran Elephant subspecies in Asia") + # map title lives under tm_layouts
+  tm_compass(type = "4star", # other compass styles available
+            show.labels = 1, # specifies compass label options
+            size = 4,
+            position = c("left", "bottom"))
+
+sumatranus_map
+```
 
 
