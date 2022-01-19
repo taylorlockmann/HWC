@@ -1,0 +1,142 @@
+---
+title: "Asian Elephant Occurance Data"
+author: "Grace Kumaishi"
+date: "1/19/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages
+library(tidyverse)
+library(rgbif)
+library(maptools)
+library(dismo)
+library(rgeos)
+library(viridis)
+#library(scrubr)
+library(raster)
+#library(DHARMa) # something is wrong when I try to install/load
+library(spocc)
+library(sf)
+library(rgdal)
+library(spData)
+library(here)
+library(lubridate)
+library(kableExtra)
+
+#install wallace
+library(wallace)
+
+#load Wallace functions
+source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
+```
+
+# This does not need to be run again unless we're changing the input settings to create and thin our occurrence data. All occurrence results are saved as csv's and can be read in with the other Rmd.
+
+## Description:
+
+This markdown file outlines the first steps for creating data for species distribution modeling (SDM) with Wallace.
+
+### Download species occurence data and get coordinates
+
+We begin by downloading the species occurrence points for the Asian Elephant using Wallace's spocc:occ() function. Choose which chunk to run based on the species of interest.
+
+Indian Elephant
+```{r}
+# Gives global records.  If limit is set high, this function can take a while to run.
+results <- spocc::occ(query = "Elephas maximus indicus", # scientific name
+                      from = "gbif", # set to records from https://www.gbif.org/
+                      limit = 15000, # max number of records
+                      has_coords = TRUE) # gets the lat/long for each observation
+
+# select just GBIF records, format the species name
+results[["gbif"]]$data[[formatSpName("Elephas maximus indicus")]]
+
+# select just the necessary information
+indicus_coords <- as.data.frame(results$gbif$data$Elephas_maximus_indicus) %>% # using GBIF data
+  dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
+  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
+         occurrenceStatus == "PRESENT",
+        eventDate <= "2021-12-31" & eventDate >= "1981-01-01")
+```
+
+Sri Lankan Elephant
+```{r}
+# Gives global records.  If limit is set high, this function can take a while to run.
+results <- spocc::occ(query = "Elephas maximus maximus", # scientific name
+                      from = "gbif", # set to records from https://www.gbif.org/
+                      limit = 15000, # max number of records
+                      has_coords = TRUE) # gets the lat/long for each observation
+
+# select just GBIF records, format the species name
+results[["gbif"]]$data[[formatSpName("Elephas maximus maximus")]]
+
+# select just the necessary information
+maximus_coords <- as.data.frame(results$gbif$data$Elephas_maximus_maximus) %>% # using GBIF data
+  dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
+  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
+         occurrenceStatus == "PRESENT",
+        eventDate <= "2021-12-31" & eventDate >= "1981-01-01")
+```
+
+Sumatran Elephant
+```{r}
+# Gives global records.  If limit is set high, this function can take a while to run.
+results <- spocc::occ(query = "Elephas maximus sumatranus", # scientific name
+                      from = "gbif", # set to records from https://www.gbif.org/
+                      limit = 15000, # max number of records
+                      has_coords = TRUE) # gets the lat/long for each observation
+
+# select just GBIF records, format the species name
+results[["gbif"]]$data[[formatSpName("Elephas maximus sumatranus")]]
+
+# select just the necessary information
+sumatranus_coords <- as.data.frame(results$gbif$data$Elephas_maximus_sumatranus) %>% # using GBIF data
+  dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
+  filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
+         occurrenceStatus == "PRESENT",
+        eventDate <= "2021-12-31" & eventDate >= "1981-01-01")
+```
+
+### Clean Data
+
+```{r}
+# remove rows with duplicate coordinates
+occs.dups <- duplicated(indicus_coords[c('longitude', 'latitude')])
+indicus_coords <- indicus_coords[!occs.dups,]
+
+occs.dups <- duplicated(maximus_coords[c('longitude', 'latitude')])
+maximus_coords <- maximus_coords[!occs.dups,]
+
+occs.dups <- duplicated(sumatranus_coords[c('longitude', 'latitude')])
+sumatranus_coords <- sumatranus_coords[!occs.dups,]
+
+# make sure latitude and longitude are numeric (sometimes they are characters)
+indicus_coords$latitude <- as.numeric(indicus_coords$latitude)
+indicus_coords$longitude <- as.numeric(indicus_coords$longitude)
+
+maximus_coords$latitude <- as.numeric(maximus_coords$latitude)
+maximus_coords$longitude <- as.numeric(maximus_coords$longitude)
+
+sumatranus_coords$latitude <- as.numeric(sumatranus_coords$latitude)
+sumatranus_coords$longitude <- as.numeric(sumatranus_coords$longitude)
+
+# give all records a unique ID
+indicus_coords$occID <- row.names(indicus_coords)
+maximus_coords$occID <- row.names(maximus_coords)
+sumatranus_coords$occID <- row.names(sumatranus_coords)
+```
+
+
+Map occurrence data
+```{r}
+
+```
+
+
+
+
+
+
