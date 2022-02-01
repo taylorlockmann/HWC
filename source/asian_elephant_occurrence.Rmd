@@ -1,5 +1,5 @@
 ---
-title: "Asian Elephant Occurance Data"
+title: "Asian Elephant Occurrence Data"
 author: "Grace Kumaishi"
 date: "1/19/2022"
 output: html_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # load packages
 library(tidyverse)
-library(rgbif)
+library(rgbif) # interface to GBIF
 library(maptools)
 library(dismo)
 library(rgeos)
@@ -18,7 +18,7 @@ library(viridis)
 #library(scrubr)
 library(raster)
 #library(DHARMa) # something is wrong when I try to install/load
-library(spocc)
+library(spocc) # Interface to species occurrence data sources
 library(sf)
 library(sp)
 library(rgdal)
@@ -27,6 +27,7 @@ library(here)
 library(lubridate)
 library(kableExtra)
 library(tmap)
+library(here)
 
 #install wallace
 library(wallace)
@@ -35,7 +36,7 @@ library(wallace)
 source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
 ```
 
-# This does not need to be run again unless we're changing the input settings to create and thin our occurrence data. All occurrence results are saved as csv's and can be read in with the other Rmd.
+This does not need to be run again unless we're changing the input settings to create and thin our occurrence data. All occurrence results are saved as csv's and can be read in with the other Rmd.
 
 ## Description:
 
@@ -43,7 +44,7 @@ This markdown file outlines the first steps for creating data for species distri
 
 ### Download species occurence data and get coordinates
 
-We begin by downloading the species occurrence points for the Asian Elephant using Wallace's spocc:occ() function. Choose which chunk to run based on the species of interest.
+We begin by downloading the species occurrence points for the Asian Elephant subspecies using Wallace's spocc:occ() function. Choose which chunk to run based on the species of interest.
 
 Indian Elephant
 ```{r}
@@ -61,7 +62,7 @@ indicus_coords <- as.data.frame(results$gbif$data$Elephas_maximus_indicus) %>% #
   dplyr::select(longitude, latitude, occurrenceStatus, coordinateUncertaintyInMeters, institutionCode, references, basisOfRecord, eventDate) %>%  # selecting just the columns that we want
   filter(!basisOfRecord %in% c("FOSSIL_SPECIMEN", "PRESERVED_SPECIMEN", "LIVING_SPECIMEN"),
          occurrenceStatus == "PRESENT",
-        eventDate <= "2021-12-31" & eventDate >= "1981-01-01")
+        eventDate <= "2021-12-31" & eventDate >= "1970-01-01")
 ```
 
 Sri Lankan Elephant
@@ -131,7 +132,7 @@ maximus_coords$occID <- row.names(maximus_coords)
 sumatranus_coords$occID <- row.names(sumatranus_coords)
 ```
 
-### Map occurrence data
+### Crop data by species range
 
 ```{r}
 # Turn data frames into sf object
@@ -152,20 +153,90 @@ sumatranus_coords_sf <- st_as_sf(x = sumatranus_coords,
 ```
 
 ```{r}
+# Read in shapefile
+range <- read_sf(here("redlist_species_data", "data_0.shp"))
+
+# Check crs
+#crs(range)
+
+# Crop coordinates by species range file
+cropped_indicus_coords <- indicus_coords_sf[range, op = st_intersects]
+
+cropped_maximus_coords <- maximus_coords_sf[range, op = st_intersects]
+
+cropped_sumatranus_coords <- sumatranus_coords_sf[range, op = st_intersects]
+```
+
+### Map occurrence data
+
+```{r}
 tmap_mode(mode = "view")
 
 asian_elephant_map <-
-  tm_shape(indicus_coords_sf) +
+  tm_shape(cropped_indicus_coords) +
     tm_symbols(col = "red",
                size = 0.2,
                alpha = 0.75) +
-  tm_shape(maximus_coords_sf) +
+  tm_shape(cropped_maximus_coords) +
     tm_symbols(col = "green",
                size = 0.2) +
-  tm_shape(sumatranus_coords_sf) +
+  tm_shape(cropped_sumatranus_coords) +
     tm_symbols(col = "blue",
-               size = 0.2)
+                size = 0.2)
 
 asian_elephant_map
 ```
+
+### Create Asian Continent Shapefile
+
+```{r}
+world_sp <- as(world, "Spatial")
+world_sf <- st_as_sf(world_sp, "sf")
+
+# filter countries to just those in Asia
+asia_countries <- world_sf %>% 
+  filter(continent == "Asia") %>% 
+  #filter(name_long != )
+  dplyr::select(name_long)
+
+# merge countries to create one large polygon
+asia <- st_combine(asia_countries)
+
+# convert Asia to spatial polygon
+asia_sp <- as_Spatial(asia, cast = TRUE)
+
+indicus_sp <- as_Spatial(cropped_indicus_coords, cast = TRUE)
+
+# check crs
+#crs(asia_sp)
+
+intersect <- sp::over(indicus_sp, asia_sp)
+
+# removes na values, so selects for points where they overlap the focal polygon
+intersect.rowNums <- as.numeric(which(!(is.na(intersect))))
+
+# filters our occurrence data to those overlapping points
+indicus_occs <- cropped_indicus_coords[intersect.rowNums, ] %>% 
+  drop_na(longitude, latitude)
+indicus_occs$name <- "Elephas maximus indicus" 
+
+# write_csv(indicus_occs, "/Users/gracekumaishi/Desktop/emLab HWC/HWC_RStudio/indicus_points.csv")
+
+write_csv(indicus_occs, "H:/My Drive/Shared with me/HWC_data/Data/Elephants/indicus_points.csv")
+```
+
+### Spatial thin
+
+```{r}
+
+```
+
+### Chelsa comparison
+
+```{r}
+
+```
+
+
+
 
