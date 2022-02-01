@@ -181,3 +181,116 @@ plot(pred)
 points(occs.xy$longitude, occs.xy$latitude, col = "black", alpha = 0.5)
 ```
 
+## Project Model (copied and pasted from Wallace GitHub)
+
+### Project Niche Model
+You selected to project your model. First define a polygon with the coordinates you chose, then crop and mask your predictor rasters. Finally, predict suitability values for these new raster cells based on the model you selected.
+
+```{r}
+
+#projCoords <- data.frame(x = {{occsPjX}}, y = {{occsPjY}})
+#projPoly <- sp::SpatialPolygons(list(sp::Polygons(list(sp::Polygon(projCoords)), ID=1)))
+
+# read csv with coordinates for polygon
+projPoly <- rgdal::readOGR(d.bg, "afrotropical_region")
+```
+
+```{asis, echo = pj.time & alg.maxnet, eval = pj.time, include = pj.time}
+### Project Niche Model to New Time
+Now download the future climate variables chosen with *Wallace*, crop and mask them by projPoly, and use the maxnet.predictRaster() function to predict the values for the new time based on the model selected.
+```
+
+```{asis, echo = pj.time & alg.maxent, eval = pj.time, include = pj.time}
+### Project Niche Model to New Time
+Now download the future climate variables chosen with *Wallace*, crop and mask them by projPoly, and use the dismo::predict() function to predict the values for the new time based on the model selected.
+```
+
+#TESTS
+```{r}
+# NOTE: provide the path to the folder that contains the rasters
+d.envs.future <- 'H:/My Drive/HWC/R_files/R_output_data/chelsa/future'
+
+# create paths to the raster files
+userRas.paths.future <- file.path(d.envs.future, c('agg_cropped_CHELSA_2041_2070_1.tif','agg_cropped_CHELSA_2041_2070_2.tif', 'agg_cropped_CHELSA_2041_2070_3.tif', 'agg_cropped_CHELSA_2041_2070_4.tif', 'agg_cropped_CHELSA_2041_2070_5.tif', 'agg_cropped_CHELSA_2041_2070_6.tif', 'agg_cropped_CHELSA_2041_2070_7.tif'))
+
+# make a RasterStack out of the raster files
+envsFuture <- raster::stack(userRas.paths.future)
+```
+
+
+#COPIED AND PASTED
+```{r pTNet, echo = pj.time, include = pj.time}
+# envsFuture <- raster::getData("CMIP5", var = "bio", res = {{bcRes}}, rcp = {{pjRCP}}, model = "{{pjGCM}}", year = {{pjYear}})
+# predsProj <- raster::crop(envsFuture, projPoly)
+# predsProj <- raster::mask(predsProj, projPoly)
+# rename future climate variable names
+names(envsFuture) <- paste0('bio', sprintf("%02d", 1:7))
+# select climate variables
+predsProj <- raster::subset(envsFuture, names(envsFuture))
+
+plot(predsProj[[1]])
+```
+
+```{r}
+# predict model
+proj <- predictMaxnet(mod, predsProj, type = 'exponential', clamp = TRUE)
+```
+
+```{r}
+# predict model
+proj <- predictMaxnet(mod, predsProj, type = 'logistic', clamp = TRUE)
+```
+
+```{r}
+# predict model
+proj <- predictMaxnet(mod, predsProj, type = 'cloglog', clamp = TRUE)
+```
+
+```{r}
+# predict model
+proj <- dismo::predict(mod, predsProj, args = c('outputformat=raw'))
+```
+
+```{r pTEnt.log, echo = pj.time & alg.maxent & viz.pred.log, include = pj.time}
+# predict model
+proj <- dismo::predict(mod, predsProj, args = c('outputformat=logistic'))
+```
+
+```{r pTEnt.cll, echo = pj.time & alg.maxent & viz.pred.cll, include = pj.time}
+# predict model
+proj <- dismo::predict(mod, predsProj, args = c('outputformat=cloglog'))
+```
+
+```{r pTBioclim, echo = pj.time & mod.bioclim, include = pj.time}
+# predict model
+proj <- dismo::predict(mod, predsProj, useC = FALSE)
+```
+
+```{r, echo = pj.thr, include = pj.thr}
+# get predicted values for occurrence grid cells
+occPredVals <- raster::extract(pred, occs.xy)
+# define minimum training presence threshold
+thr <- thresh(occPredVals, "{{comp8.thresh}}")
+# threshold model prediction
+proj <- proj > thr
+```
+
+```{r, echo = pj.any, include = pj.any}
+# plot the model prediction
+plot(proj)
+```
+
+```{asis, echo = pj.mess, eval = pj.mess, include = pj.mess}
+### Calculate Environmental Similarity
+To visualize the environmental difference between the occurrence localities and your selected projection extent, calculate a multidimensional environmental similarity surface (MESS). High negative values mean great difference, whereas high positive values mean great similarity. Interpreting the projected suitability for areas with high negative values should be done with extreme caution, as they are outside the environmental range of the occurrence localities.
+```
+
+```{r projMESS, echo = pj.mess, include = pj.mess}
+# extract environmental values from occurrence localities and background -- these were the values that went into the model
+names(bg.xy) <- names(occs.xy)
+all.xy <- rbind(occs.xy, bg.xy)
+occEnvVals <- raster::extract(envs, all.xy)
+# compare these values with the projection extent (envsMsk)
+proj.mess <- dismo::mess(predsProj, occEnvVals)
+plot(proj.mess)
+```

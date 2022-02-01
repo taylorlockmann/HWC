@@ -1,0 +1,126 @@
+---
+title: "Chelsa Data Wrangling (Future)"
+author: "Roshni Katrak-Adefowora"
+date: "1/24/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(raster)
+library(tidyverse)
+library(sf)
+```
+
+In this R Markdown, we prepare the CHELSA climatic data for use in Wallce. 
+
+## Elements required for each scenario
+```{r}
+#afrotropical region, which rasters will be cropped to
+afrotropical_region <- st_read("H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", crs = 4326)
+
+#bios <- c(1,2,5,6,12,13,14)
+layers <- 1:7
+```
+
+
+# 2011 - 2040
+## SSP1 RCP 2.6
+```{r}
+chelsa_2011_2040_126_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/2011_2040/SSP1_RCP26/CHELSA_bio", c(1,2,5,6,12,13,14), "_2011-2040_gfdl-esm4_ssp126_V.2.1.tif"))
+
+chelsa_2011_2040_126_cropped <- crop(chelsa_2011_2040_126_stack, afrotropical_region)
+
+for (i in layers){
+  r <- chelsa_2011_2040_126_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2011_2040/SSP1_RCP26/CHELSA_2011_2040_126_bio", i, ".tif"), overwrite = TRUE)
+}
+```
+
+## SSP5 RCP8.5
+```{r}
+chelsa_2011_2040_585_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/2011_2040/SSP5_RCP85/CHELSA_bio", c(1,2,5,6,12,13,14), "_2011-2040_gfdl-esm4_ssp585_V.2.1.tif"))
+
+chelsa_2011_2040_585_cropped <- crop(chelsa_2011_2040_585_stack, afrotropical_region)
+#plot(chelsa_cropped[[1]])
+
+for (i in layers){
+  r <- chelsa_2011_2040_585_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2011_2040/SSP5_RCP85/CHELSA_2011_2040_585_bio", i, ".tif"), overwrite = TRUE)
+}
+```
+
+
+# 2041 - 2070
+## SSP1 RCP2.6
+```{r}
+chelsa_2041_2070_126_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/2041_2070/SSP1_RCP26/CHELSA_bio", c(1,2,5,6,12,13,14), "_2041-2070_gfdl-esm4_ssp126_V.2.1.tif"))
+
+chelsa_2041_2070_126_cropped <- crop(chelsa_2041_2070_126_stack, afrotropical_region)
+#plot(chelsa_cropped[[1]])
+
+for (i in layers){
+  r <- chelsa_2041_2070_126_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2041_2070/SSP1_RCP26/CHELSA_2041_2070_126_bio", i, ".tif"), overwrite = TRUE)
+}
+```
+
+## SSP3 RCP7 (hold off for now, no land use data for RCP7)
+```{r}
+chelsa_2041_2070_370_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/CHELSA_bio", c(1,2,5,6,12,13,14), "_2041-2070_gfdl-esm4_ssp370_V.2.1.tif"))
+
+chelsa_2041_2070_370_cropped <- crop(chelsa_2041_2070_370_stack, afrotropical_region)
+
+plot(chelsa_2041_2070_370_cropped[[5]])
+
+for (i in layers){
+  r <- chelsa_2041_2070_370_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/agg_cropped_CHELSA_2041_2070_", i, ".tif"), overwrite = TRUE)
+}
+```
+
+## SSP5 RCP8.5
+```{r}
+chelsa_2041_2070_585_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/2041_2070/SSP5_RCP85/CHELSA_bio", c(1,2,5,6,12,13,14), "_2041-2070_gfdl-esm4_ssp585_V.2.1.tif"))
+
+chelsa_2041_2070_585_cropped <- crop(chelsa_2041_2070_585_stack, afrotropical_region)
+
+for (i in layers){
+  r <- chelsa_2041_2070_585_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2041_2070/SSP5_RCP85/CHELSA_2041_2070_585_bio", i, ".tif"), overwrite = TRUE)
+}
+```
+
+# 2071 - 2100
+## SSP1 RCP2.6
+```{r}
+chelsa_2071_2100_126_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/2071_2100/SSP1_RCP26/CHELSA_bio", c(1,2,5,6,12,13,14), "_2071-2100_gfdl-esm4_ssp126_V.2.1.tif"))
+
+chelsa_2071_2100_126_cropped <- crop(chelsa_2071_2100_126_stack, afrotropical_region)
+#plot(chelsa_cropped[[1]])
+
+for (i in layers){
+  r <- chelsa_2071_2100_126_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2071_2100/SSP1_RCP26/CHELSA_2071_2100_126_bio", i, ".tif"), overwrite = TRUE)
+}
+```
+
+## SSP5 RCP8.5
+```{r}
+chelsa_2071_2100_585_stack <- stack(paste0("H:/My Drive/HWC/R_files/R_input_data/chelsa/future/2071_2100/SSP5_RCP85/CHELSA_bio", c(1,2,5,6,12,13,14), "_2071-2100_gfdl-esm4_ssp585_V.2.1.tif"))
+
+chelsa_2071_2100_585_cropped <- crop(chelsa_2071_2100_585_stack, afrotropical_region)
+
+for (i in layers){
+  r <- chelsa_2071_2100_585_cropped[[i]]
+  agg <- aggregate(r, fact = 5, fun = mean)
+  writeRaster(agg, paste0("H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2071_2100/SSP5_RCP85/CHELSA_2071_2100_585_bio", i, ".tif"), overwrite = TRUE)
+}
+```
+

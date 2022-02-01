@@ -40,7 +40,7 @@ current workspace, change to the correct file path
 
 ```{r}
 # NOTE: provide the path to the folder that contains the CSV file
-d.occs <- 'H:/My Drive/HWC/Data/Chelsa_Data'
+d.occs <- 'H:/My Drive/HWC/R_files/R_output_data/occurrence_points'
 
 # create path to user occurrences csv file
 userOccs.path <- file.path(d.occs, "lion_chelsa_points_thinned.csv")
@@ -66,7 +66,7 @@ occs$occID <- row.names(occs)
 d.envs <- 'H:/My Drive/HWC/Data/Chelsa_Data/aggregated_cropped_CHELSA_data'
 
 # create paths to the raster files
-userRas.paths <- file.path(d.envs, c('agg_cropped_CHELSA_bio1.tif','agg_cropped_CHELSA_bio2.tif', 'agg_cropped_CHELSA_bio6.tif', 'agg_cropped_CHELSA_bio12.tif', 'agg_cropped_CHELSA_bio14.tif'))
+userRas.paths <- file.path(d.envs, c('agg_cropped_CHELSA_bio01.tif','agg_cropped_CHELSA_bio02.tif', 'agg_cropped_CHELSA_bio05.tif', 'agg_cropped_CHELSA_bio06.tif', 'agg_cropped_CHELSA_bio12.tif', 'agg_cropped_CHELSA_bio13.tif', 'agg_cropped_CHELSA_bio14.tif'))
 
 # make a RasterStack out of the raster files
 envs <- raster::stack(userRas.paths)
@@ -179,5 +179,52 @@ pred <- evalPreds[["rm.1_fc.L"]]
 # plot the model prediction
 plot(pred)
 points(occs.xy$longitude, occs.xy$latitude, col = "black", alpha = 0.5)
+
+# save as raster
+ # lion_historic_sdm <- writeRaster(pred, filename = file.path("H:/My Drive/HWC/Wallace SDM Rasters/lion_historic_sdm.tif"), overwrite = FALSE)
 ```
 
+### Project Niche Model to New Time
+
+Now download the future climate variables chosen with *Wallace*, crop
+and mask them by projPoly, and use the maxnet.predictRaster() function
+to predict the values for the new time based on the model selected.
+
+```{r}
+# NOTE: provide the path to the folder that contains the rasters
+d.envsFuture <- 'H:/My Drive/HWC/R_files/R_output_data/chelsa/future/2011_2040/SSP1_RCP26'
+
+# create paths to the raster files
+userRas.pathsFuture <- file.path(d.envsFuture, c('CHELSA_2011_2040_126_bio1.tif','CHELSA_2011_2040_126_bio2.tif', 'CHELSA_2011_2040_126_bio5.tif', 'CHELSA_2011_2040_126_bio6.tif', 'CHELSA_2011_2040_126_bio12.tif', 'CHELSA_2011_2040_126_bio13.tif', 'CHELSA_2011_2040_126_bio14.tif'))
+
+# make a RasterStack out of the raster files
+envsFuture <- raster::stack(userRas.pathsFuture)
+
+presProj <- raster::crop(envsFuture, bgExt)
+predsProj <- raster::mask(presProj, bgExt)
+```
+
+
+```{r}
+# rename future climate variable names (not necessary?)
+names(predsProj) <- paste0('agg_cropped_CHELSA_bio', sprintf("%02d", c(1, 2, 5, 6, 12, 13, 14)))
+
+#plot future climate variables
+#plot(predsProj[[6]])
+
+# select climate variables (not necessary?)
+#predsProj <- raster::subset(predsProj, names(envsFuture))
+```
+
+```{r}
+# predict model
+proj <- predictMaxnet(mod, predsProj, type = 'exponential', clamp = TRUE)
+```
+
+```{r}
+# plot the model prediction
+plot(proj)
+
+# save as raster
+ lion_historic_sdm <- writeRaster(proj, filename = file.path("H:/My Drive/HWC/Wallace SDM Rasters/lion_2071_2100_585_sdm.tif"), overwrite = FALSE)
+```
