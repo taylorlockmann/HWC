@@ -17,7 +17,7 @@ library(rgeos)
 library(viridis)
 #library(scrubr)
 library(raster)
-library(DHARMa)
+#library(DHARMa)
 library(spocc)
 library(sf)
 library(rgdal)
@@ -28,7 +28,7 @@ library(kableExtra)
 
 #install wallace
 library(wallace)
-run_wallace()
+#run_wallace()
 
 #load Wallace functions
 source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
