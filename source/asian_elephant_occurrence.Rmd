@@ -272,5 +272,26 @@ for (i in layers){
 chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", c("1","2","5","6","12","13","14"), ".tif"))
 ```
 
+```{r}
+# need just lt/long values in two columns to used raster extract
+all_spp_coords <- all_spp_coords[c('species', 'longitude', 'latitude')]
+all_spp_coords_xy <- all_spp_coords[c('longitude', 'latitude')]
+```
+
+```{r}
+# extracting values
+all_species_extract <- raster::extract(chelsa_aggregated_stack, all_spp_coords_xy)
+```
+
+```{r}
+# add columns species, lat, long
+all_species_extract_final <- cbind(all_spp_coords, all_species_extract)
+```
+
+
+
+
+
+
 
 
