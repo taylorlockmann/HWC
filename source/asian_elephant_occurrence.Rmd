@@ -29,6 +29,9 @@ library(kableExtra)
 library(tmap)
 library(here)
 library(dplyr)
+library(ggplot2)
+library(ggbeeswarm)
+library(patchwork)
 
 #install wallace
 library(wallace)
@@ -281,6 +284,9 @@ all_spp_coords_xy <- all_spp_coords[c('longitude', 'latitude')]
 ```{r}
 # extracting values
 all_species_extract <- raster::extract(chelsa_aggregated_stack, all_spp_coords_xy)
+
+# add columns species, lat, long
+all_species_extract_final <- cbind(all_spp_coords, all_species_extract)
 ```
 
 ```{r}
@@ -288,10 +294,201 @@ all_species_extract <- raster::extract(chelsa_aggregated_stack, all_spp_coords_x
 all_species_extract_final <- cbind(all_spp_coords, all_species_extract)
 ```
 
+### Create graphs
 
+CHELSA 1
+```{r}
+chelsa_1_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_1 = mean(asia_cropped_CHELSA_layer1))
 
+chelsa_1_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_1 = sd(asia_cropped_CHELSA_layer1))
 
+p1 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer1, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer1),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_1_mean, # Add mean
+                aes(x = species, y = mean_1)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 1") +
+  theme(legend.position = "none")
+```
 
+CHELSA 2
+```{r}
+chelsa_2_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_2 = mean(asia_cropped_CHELSA_layer2))
 
+chelsa_2_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_2 = sd(asia_cropped_CHELSA_layer2))
 
+p2 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer2, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer2),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_2_mean, # Add mean
+                aes(x = species, y = mean_2)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 2") +
+  theme(legend.position = "none")
+```
+
+CHELSA 5
+```{r}
+chelsa_5_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_5 = mean(asia_cropped_CHELSA_layer5))
+
+chelsa_5_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_5 = sd(asia_cropped_CHELSA_layer5))
+
+p5 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer5, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer5),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_5_mean, # Add mean
+                aes(x = species, y = mean_5)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 5") +
+  theme(legend.position = "none")
+```
+
+CHELSA 6
+```{r}
+chelsa_6_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_6 = mean(asia_cropped_CHELSA_layer6))
+
+chelsa_6_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_6 = sd(asia_cropped_CHELSA_layer6))
+
+p6 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer6, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer6),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_6_mean, # Add mean
+                aes(x = species, y = mean_6)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 6") +
+  theme(legend.position = "none")
+```
+
+CHELSA 12
+```{r}
+chelsa_12_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_12 = mean(asia_cropped_CHELSA_layer12))
+
+chelsa_12_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_12 = sd(asia_cropped_CHELSA_layer12))
+
+p12 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer12, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer12),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_12_mean, # Add mean
+                aes(x = species, y = mean_12)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 12") +
+  theme(legend.position = "none")
+```
+
+CHELSA 13
+```{r}
+chelsa_13_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_13 = mean(asia_cropped_CHELSA_layer13))
+
+chelsa_13_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_13 = sd(asia_cropped_CHELSA_layer13))
+
+p13 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer13, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer13),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_13_mean, # Add mean
+                aes(x = species, y = mean_13)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 13") +
+  theme(legend.position = "none")
+```
+
+CHELSA 14
+```{r}
+chelsa_14_mean <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(mean_14 = mean(asia_cropped_CHELSA_layer14))
+
+chelsa_14_sd <- all_species_extract_final %>% 
+  group_by(species) %>% 
+  summarize(sd_14 = sd(asia_cropped_CHELSA_layer14))
+
+p14 <- ggplot() +
+  geom_quasirandom(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer14, color = species),
+                size = 2,
+                alpha = 0.5) +
+  geom_jitter() +
+  geom_boxplot(data = all_species_extract_final,
+                aes(x = species, y = asia_cropped_CHELSA_layer14),
+                width = 0.3,
+                size = 0.5,
+                alpha = 0) +
+  geom_point(data = chelsa_14_mean, # Add mean
+                aes(x = species, y = mean_14)) +
+  theme_minimal() +
+  labs(x = "Species", y = "CHELSA 14") +
+  theme(legend.position = "none")
+```
 
