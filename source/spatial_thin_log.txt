@@ -364,3 +364,22 @@ loc.cnt df.freq
 Maximum number of records after thinning: 99
 Number of data.frames with max records: 2
 No files written for this run.
+********************************************** 
+ Beginning Spatial Thinning.
+ Script Started at: Tue Feb 15 15:21:17 2022
+There appear to be more than one species name in this *.csv file.
+Only using species name: Indian elephant
+
+Thinning Parameter Used (in km): 10
+Number of replicates of thinning script: 10
+
+Elapsed time for thinning completion
+3.558 1.314 4.938 0.01 0.014
+
+Number of data.frames per locations retained
+loc.cnt df.freq
+95	96	97	98
+1	5	2	2
+Maximum number of records after thinning: 98
+Number of data.frames with max records: 2
+No files written for this run.

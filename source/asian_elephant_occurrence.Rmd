@@ -200,7 +200,7 @@ cropped_all_spp_coords <- all_spp_coords_sf[range, op = st_intersects]
 
 ```{r}
 # save to Google Drive
-write_csv(cropped_indicus_coords, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/occurrence_points/cropped_indicus_coords_draft.csv") # overwrite = FALSE prevents from overwriting
+#write_csv(cropped_indicus_coords, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/occurrence_points/cropped_indicus_coords_draft.csv") # overwrite = FALSE prevents from overwriting
 ```
 
 ### Map occurrence data
@@ -250,33 +250,35 @@ asia_sp <- as_Spatial(asia, cast = TRUE)
 The below codechunk only needs to be run one time unless the individual bioclimatic variables change. 
 ```{r}
 # Crop CHELSA data to Asia shapefile
-chelsa_uncropped_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/uncropped_CHELSA_data/CHELSA_bio_", c("1","2","5","6","12","13","14"), ".tif"))
+chelsa_uncropped_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/uncropped_CHELSA_data/CHELSA_bio_", c("1","2","5","6","7","8","9","10","11","12","13","14","16","17","18","19"), ".tif"))
 
 chelsa_cropped <- crop(chelsa_uncropped_stack, asia_sp)
 
-plot(chelsa_cropped[[1]])
-plot(chelsa_cropped[[2]])
-plot(chelsa_cropped[[3]])
-plot(chelsa_cropped[[4]])
-plot(chelsa_cropped[[5]])
-plot(chelsa_cropped[[6]])
-plot(chelsa_cropped[[7]])
+#plot(chelsa_cropped[[1]])
+#plot(chelsa_cropped[[2]])
+#plot(chelsa_cropped[[3]])
+#plot(chelsa_cropped[[4]])
+#plot(chelsa_cropped[[5]])
+#plot(chelsa_cropped[[6]])
+#plot(chelsa_cropped[[7]])
 
 # Aggregate layers and save to Google Drive
-bios <- c(1,2,5,6,12,13,14)
-layers <- 1:7
+bios <- c(1,2,5,6,7,8,9,10,11,12,13,14,16,17,18,19)
+layers <- 1:16
 
 for (i in layers){
   r <- chelsa_cropped[[i]]
   agg <- aggregate(r, fact = 5, fun = mean)
-  writeRaster(agg, paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", i, ".tif"), overwrite = FALSE)
+  writeRaster(agg, paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", i, ".tif"), overwrite = TRUE)
 }
+
+# Now you must manually change the bioclim numbers in the saved files in the Google Drive
 ```
 
 ```{r}
 # Call CHELSA data from Google Drive and stack aggregated CHELSA data
 
-chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", c("1","2","5","6","12","13","14"), ".tif"))
+chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", c("1","2","5","6","7","8","9","10","11","12","13","14","16","17","18","19"), ".tif"))
 
 #plot(chelsa_aggregated_stack[[1]])
 #plot(chelsa_aggregated_stack[[2]])
@@ -321,6 +323,24 @@ all_spp_occs <- cropped_all_spp_coords[as.numeric(rownames(all_spp_maxThin)),]
 # save occs to upload to Wallace if needed
          all_spp_occs_wallace <- all_spp_occs %>% 
            dplyr::select(species, longitude, latitude) # change order to match
+```
+
+```{r}
+# Graph thinned occs
+
+all_spp_occs_sf <- st_as_sf(x = all_spp_occs,
+                              coords = c("longitude", "latitude"),
+                              crs = 4326)
+
+tmap_mode(mode = "view")
+
+thinned_asian_elephant_map <-
+  tm_shape(all_spp_occs_sf) +
+    tm_symbols(col = "species",
+               size = 0.2,
+               alpha = 0.75)
+
+thinned_asian_elephant_map
 ```
 
 ```{r}
