@@ -1,0 +1,152 @@
+---
+title: "Asia Chelsa Data Wrangling (Future)"
+author: "Grace Kumaishi"
+date: "3/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(raster)
+library(tidyverse)
+library(sf)
+```
+
+```{r}
+## Elements required for each scenario
+#afrotropical region, which rasters will be cropped to
+afrotropical_region <- st_read("H:/My Drive/HWC_data/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", crs = 4326)
+
+#bios <- c(1,2,5,6,12,13,14) # FIX THIS
+layers <- 1:7 # FIX THIS
+```
+
+############################### 2071-2100 ############################### 
+
+############################ SSP 1 RCP 2.6 ##############################
+
+# 2071 - 2100
+# SSP 1 RCP 2.6
+# GFDL-ESM4 MODEL
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 1 RCP 2.6
+# IPSL-CM6A-LR
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 1 RCP 2.6
+# MPI-ESM1-2-HR
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 1 RCP 2.6
+# MRI-ESM2-0
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 1 RCP 2.6
+# UKESM1-0-LL
+
+```{r}
+
+```
+
+############################ SSP 3 RCP 7 #################################
+
+# 2071 - 2100
+# SSP 3 RCP 7
+# GFDL-ESM4 MODEL
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 3 RCP 7
+# IPSL-CM6A-LR
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 3 RCP 7
+# MPI-ESM1-2-HR
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 3 RCP 7
+# MRI-ESM2-0
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 3 RCP 7
+# UKESM1-0-LL
+
+```{r}
+
+```
+
+############################ SSP 5 RCP 8.5 #################################
+
+# 2071 - 2100
+# SSP 5 RCP 8.5
+# GFDL-ESM4 MODEL
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 5 RCP 8.5
+# IPSL-CM6A-LR
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 5 RCP 8.5
+# MPI-ESM1-2-HR
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 5 RCP 8.5
+# MRI-ESM2-0
+
+```{r}
+
+```
+
+# 2071 - 2100
+# SSP 5 RCP 8.5
+# UKESM1-0-LL
+
+```{r}
+
+```
+
+############################### 2041-2070 ############################### 

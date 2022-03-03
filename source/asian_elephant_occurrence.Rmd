@@ -414,17 +414,17 @@ for (i in layers){
 
 chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", c("1","2","3","4","7","10","11","12","15","16","17"), ".tif"))
 
-# plot(chelsa_aggregated_stack[[1]])
+plot(chelsa_aggregated_stack[[1]])
 # plot(chelsa_aggregated_stack[[2]])
 # plot(chelsa_aggregated_stack[[3]])
 # plot(chelsa_aggregated_stack[[4]])
-# plot(chelsa_aggregated_stack[[5]])
-# plot(chelsa_aggregated_stack[[6]])
-# plot(chelsa_aggregated_stack[[7]])
-# plot(chelsa_aggregated_stack[[8]])
+# plot(chelsa_aggregated_stack[[5]]) #7
+plot(chelsa_aggregated_stack[[6]]) #10
+# plot(chelsa_aggregated_stack[[7]]) #11
+plot(chelsa_aggregated_stack[[8]]) #12
 # plot(chelsa_aggregated_stack[[9]])
-# plot(chelsa_aggregated_stack[[10]])
-# plot(chelsa_aggregated_stack[[11]])
+plot(chelsa_aggregated_stack[[10]]) #16
+# plot(chelsa_aggregated_stack[[11]]) #17
 ```
 
 ### Extract bioclim data at presence points and check correlation:
