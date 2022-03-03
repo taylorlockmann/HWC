@@ -28,7 +28,7 @@ library(kableExtra)
 
 #install wallace
 library(wallace)
-run_wallace()
+#run_wallace()
 
 #load Wallace functions
 source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
@@ -48,7 +48,7 @@ The Maxent GUI can be run two different ways:
 
 Choose line to run depending on species & period
 ```{r}
-occs <- read_csv("H:/My Drive/HWC/R_files/R_output_data/occurrence_points/lion_all_points_thinned.csv")
+occs <- read_csv("H:/My Drive/HWC_data/R_files/R_output_data/occurrence_points/lion_chelsa_points_thinned.csv")
 occs <- read_csv("H:/My Drive/HWC/R_files/R_output_data/occurrence_points/lion_bioclim_points_thinned.csv")
 occs <- read_csv("H:/My Drive/HWC/R_files/R_output_data/occurrence_points/lion_chelsa_points_thinned.csv")
 ```
@@ -82,40 +82,43 @@ bioclim_data_v2 <- stack(rastlist)
 crs(bioclim_data_v2) <- "+proj=longlat +datum=WGS84 +no_defs"
 
 #read in chelsa data
-rastlist_chelsa <- list.files(path = "H:/My Drive/HWC/Data/Chelsa_Data/CHELSA_bio", pattern='.tif$', full.names=TRUE)
-chelsa_data <- stack(rastlist_chelsa)
+# rastlist_chelsa <- list.files(path = "H:/My Drive/HWC_data/Data/Chelsa_Data/aggregated_cropped_CHELSA_data/agg_cropped_CHELSA_bio", pattern='.tif$', full.names=TRUE)
+# chelsa_data <- stack(rastlist_chelsa)
+
+chelsa_data <- stack(paste0("H:/My Drive/HWC_data/Data/Chelsa_Data/aggregated_cropped_CHELSA_data/agg_cropped_CHELSA_bio", c("01","02","05","06","12","13","14"), ".tif"))
 
 #get spatial extent using Afrotropical ecoregion from WWF. Data downloaded from https://www.worldwildlife.org/publications/terrestrial-ecoregions-of-the-world
-afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC/R_files/R_input_data/wwf_ecoregions/official", layer = "wwf_terr_ecos") %>% 
+afrotropical_region <- read_sf(dsn = "H:/My Drive/HWC_data/R_files/R_input_data/wwf_ecoregions/official", layer = "wwf_terr_ecos") %>% 
   filter(REALM == "AT")
 
 #check crs
 crs(afrotropical_region) # +proj=longlat +datum=WGS84 +no_defs 
+crs(chelsa_data) # +proj=longlat +datum=WGS84 +no_defs 
 
 # create shapefile for wallace
 # st_write(afrotropical_region, dsn = "H:/My Drive/HWC/R_files/R_output_data/afrotropical_region/afrotropical_region.shp", layer = "afrotropical_region.shp", driver = "ESRI Shapefile")
 
 # cropping bioclim variables to extent of Africa spatial polygon
-bioclim_crop <- raster::crop(bioclim_data_v2, afrotropical_region)
+chelsa_crop <- raster::crop(chelsa_data, afrotropical_region)
 
 # double checking to see they line up
-plot(bioclim_crop[[1]])
+plot(chelsa_crop[[6]])
 plot(buffer_points, add = TRUE)
 
 # extract environmental values at occ grid cells
-locs.vals <- raster::extract(bioclim_crop[[1]], occs[, c('longitude', 'latitude')])
+locs.vals <- raster::extract(chelsa_crop[[1]], occs[, c('longitude', 'latitude')])
 
-bioclim_selected <- raster::subset(bioclim_crop, c("wc2.1_2.5m_bio_1", "wc2.1_2.5m_bio_2", "wc2.1_2.5m_bio_5", "wc2.1_2.5m_bio_6", "wc2.1_2.5m_bio_12", "wc2.1_2.5m_bio_13", "wc2.1_2.5m_bio_14"))
+chelsa_selected <- raster::subset(chelsa_crop, c("agg_cropped_CHELSA_bio01", "agg_cropped_CHELSA_bio02", "agg_cropped_CHELSA_bio05", "agg_cropped_CHELSA_bio06", "agg_cropped_CHELSA_bio12", "agg_cropped_CHELSA_bio13", "agg_cropped_CHELSA_bio14"))
 
-bioclim_selected_extract <- raster::extract(bioclim_crop[[1]], occs[, c('longitude', 'latitude')])
+chelsa_selected_extract <- raster::extract(chelsa_selected, occs[, c('longitude', 'latitude')])
 # remove occs without environmental values
 occs_ <- occs[!is.na(bioclim_selected_extract), ]
 ```
 
 Find correlated bioclim variables
 ```{r}
-bioclim_corr=layerStats(bioclim_selected_extract, 'pearson', na.rm=T)
-corr_matrix=bioclim_corr$'pearson correlation coefficient'
+chelsa_corr=layerStats(chelsa_selected_extract, 'pearson', na.rm=T)
+corr_matrix=chelsa_corr$'pearson correlation coefficient'
 corr_matrix[!corr_matrix > 0.75, ]
 ```
 
@@ -169,8 +172,8 @@ occs.xy <- occs[c('longitude', 'latitude')]
 bg.xy <- as.data.frame(bg_points) # using buffer points for now
 
 # extracting values
-occ_extract <- raster::extract(bioclim_crop, occs.xy)
-bg_extract <- raster::extract(bioclim_crop, bg.xy)
+occ_extract <- raster::extract(chelsa_crop, occs.xy)
+bg_extract <- raster::extract(chelsa_crop, bg.xy)
 
 # saving as data frames, adding in data
 occ_extract_final <- as.data.frame(occ_extract) %>% 

@@ -19,8 +19,3 @@ for (i in layers){
   agg <- aggregate(r, fact = 5, fun = mean)
   writeRaster(agg, paste0("C:/Users/tlock/Desktop/Arnhold Fellowship Work/GCAM_land_use_change/gcam_land_use_change/data/Chelsa Data/Cropped Chelsa Data/agg_cropped_CHELSA_layer", i, ".tif"), overwrite = TRUE)
 }
-
-
-
-
-
