@@ -122,6 +122,11 @@ sumatranus_coords <- as.data.frame(results$gbif$data$Elephas_maximus_sumatranus)
 #st_write(indomalay_region, dsn = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/indomalay_region/indomalay_region.shp", layer = "indomalay_region.shp", driver = "ESRI Shapefile")
 
 indomalay_region <- st_read("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/indomalay_region/indomalay_region.shp")
+
+indomalay_region_sp <- as_Spatial(indomalay_region, cast = TRUE)
+
+#plot(indomalay_region_sp)
+#crs(indomalay_region_sp)
 ```
 
 ### Clean Data
@@ -384,26 +389,32 @@ The below codechunk only needs to be run one time unless the individual bioclima
 library(terra)
 
 # Crop CHELSA data to Asia shapefile
-chelsa_uncropped_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/uncropped_CHELSA_data/CHELSA_bio_", c("1","2","3","4","7","10","11","12","15","16","17"), ".tif"))
+chelsa_uncropped_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/uncropped_CHELSA_data/CHELSA_bio_", c("1","2","7","10","11","12","16","17"), ".tif"))
 
-chelsa_cropped <- terra::crop(chelsa_uncropped_stack, indomalay_region_sp)
+chelsa_cropped <- terra::crop(chelsa_uncropped_stack, indomalay_region)
 
-#plot(chelsa_cropped[[1]])
-#plot(chelsa_cropped[[2]])
-#plot(chelsa_cropped[[3]])
-#plot(chelsa_cropped[[4]])
-#plot(chelsa_cropped[[5]])
-#plot(chelsa_cropped[[6]])
-#plot(chelsa_cropped[[7]])
+indomalay_region_vect <- terra::vect(indomalay_region_sp, filter=p, crs=4326)
+
+chelsa_cropped_rast <- terra::rast(chelsa_cropped)
+
+chelsa_mask <- terra::mask(chelsa_cropped_rast, indomalay_region_vect)
+
+#plot(chelsa_mask[[1]])
+#plot(chelsa_mask[[2]])
+#plot(chelsa_mask[[3]])
+#plot(chelsa_mask[[4]])
+#plot(chelsa_mask[[5]])
+#plot(chelsa_mask[[6]])
+#plot(chelsa_mask[[7]])
 
 # Aggregate layers and save to Google Drive
-bios <- c(1,2,3,4,7,10,11,12,15,16,17)
-layers <- 1:11
+bios <- c(1,2,7,10,11,12,16,17)
+layers <- 1:8
 
 for (i in layers){
-  r <- chelsa_cropped[[i]]
+  r <- chelsa_mask[[i]]
   agg <- aggregate(r, fact = 5, fun = mean)
-  writeRaster(agg, paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", i, ".tif"), overwrite = TRUE)
+  writeRaster(agg, paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_masked_CHELSA_data/asia_masked_CHELSA_layer", i, ".tif"), overwrite = TRUE)
 }
 
 # Now you must manually change the bioclim numbers in the saved files in the Google Drive
@@ -412,18 +423,18 @@ for (i in layers){
 ```{r}
 # Call CHELSA data from Google Drive and stack aggregated CHELSA data
 
-chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_cropped_CHELSA_data/asia_cropped_CHELSA_layer", c("1","2","3","4","7","10","11","12","15","16","17"), ".tif"))
+chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_masked_CHELSA_data/asia_masked_CHELSA_layer", c("1","2","7","10","11","12","16","17"), ".tif"))
 
-plot(chelsa_aggregated_stack[[1]])
+#plot(chelsa_aggregated_stack[[1]])
 # plot(chelsa_aggregated_stack[[2]])
 # plot(chelsa_aggregated_stack[[3]])
 # plot(chelsa_aggregated_stack[[4]])
 # plot(chelsa_aggregated_stack[[5]]) #7
-plot(chelsa_aggregated_stack[[6]]) #10
+#plot(chelsa_aggregated_stack[[6]]) #10
 # plot(chelsa_aggregated_stack[[7]]) #11
-plot(chelsa_aggregated_stack[[8]]) #12
+#plot(chelsa_aggregated_stack[[8]]) #12
 # plot(chelsa_aggregated_stack[[9]])
-plot(chelsa_aggregated_stack[[10]]) #16
+#plot(chelsa_aggregated_stack[[10]]) #16
 # plot(chelsa_aggregated_stack[[11]]) #17
 ```
 
@@ -520,6 +531,8 @@ indicus_coords_final <- read_csv("/Volumes/GoogleDrive/.shortcut-targets-by-id/1
 all_combined_asian_elephant_coords <- read_csv("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Asian_Elephant/all_combined_asian_elephant_coords.csv")
 
 all_spp_historic <- raster("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Wallace SDM Rasters/asia/new_all_spp.tif")
+
+one_ten_twelve_historic <- raster("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Wallace SDM Rasters/asia/one_ten_twelve.tif")
 ```
 
 ```{r}
@@ -529,5 +542,8 @@ plot(all_spp_historic)
 
 plot(indicus_historic)
 #points(indicus_coords_final$longitude, indicus_coords_final$latitude, col = "black", alpha = 0.5)
+
+plot(one_ten_twelve_historic)
+points(all_combined_asian_elephant_coords$longitude, all_combined_asian_elephant_coords$latitude, col = "black", alpha = 0.5)
 ```
 
