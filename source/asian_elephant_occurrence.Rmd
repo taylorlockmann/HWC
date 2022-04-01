@@ -366,11 +366,17 @@ all_combined_asian_elephant_coords <- all_subspecies_coords %>%
     name == "Indian elephant" ~ "Elephas_maximus", 
     name == "Sri Lankan elephant" ~ "Elephas_maximus",
     name == "Sumatran elephant" ~ "Elephas_maximus"))
+
+all_combined_asian_elephant_coords_sf <- st_as_sf(x = all_combined_asian_elephant_coords,
+                              coords = c("longitude", "latitude"),
+                              crs = 4326)
 ```
 
 ```{r}
 ### Save occs to Google Drive:
 write_csv(all_combined_asian_elephant_coords, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Asian_Elephant/all_combined_asian_elephant_coords.csv") # overwrite = FALSE prevents from overwriting
+
+st_write(all_combined_asian_elephant_coords_sf, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Asian_Elephant/all_combined_asian_elephant_coords.shp")
 
 ### Indian Elephant only:
 write_csv(thinned_indicus_coords_final, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Asian_Elephant/final_indicus_coords.csv") # overwrite = FALSE prevents from overwriting
@@ -389,7 +395,7 @@ The below codechunk only needs to be run one time unless the individual bioclima
 library(terra)
 
 # Crop CHELSA data to Asia shapefile
-chelsa_uncropped_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/uncropped_CHELSA_data/CHELSA_bio_", c("1","2","7","10","11","12","16","17"), ".tif"))
+chelsa_uncropped_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/uncropped_CHELSA_data/CHELSA_bio_", c("1","2","4","6","7","10","11","12","13","14","15","16","17"), ".tif"))
 
 chelsa_cropped <- terra::crop(chelsa_uncropped_stack, indomalay_region)
 
@@ -408,8 +414,8 @@ chelsa_mask <- terra::mask(chelsa_cropped_rast, indomalay_region_vect)
 #plot(chelsa_mask[[7]])
 
 # Aggregate layers and save to Google Drive
-bios <- c(1,2,7,10,11,12,16,17)
-layers <- 1:8
+bios <- c(1,2,4,6,7,10,11,12,13,14,15,16,17)
+layers <- 1:13
 
 for (i in layers){
   r <- chelsa_mask[[i]]
@@ -423,7 +429,7 @@ for (i in layers){
 ```{r}
 # Call CHELSA data from Google Drive and stack aggregated CHELSA data
 
-chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_masked_CHELSA_data/asia_masked_CHELSA_layer", c("1","2","7","10","11","12","16","17"), ".tif"))
+chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_masked_CHELSA_data/asia_masked_CHELSA_layer", c("1","2","4","6","7","12","14","15"), ".tif"))
 
 #plot(chelsa_aggregated_stack[[1]])
 # plot(chelsa_aggregated_stack[[2]])
@@ -545,5 +551,13 @@ plot(indicus_historic)
 
 plot(one_ten_twelve_historic)
 points(all_combined_asian_elephant_coords$longitude, all_combined_asian_elephant_coords$latitude, col = "black", alpha = 0.5)
+
+tmap_mode(mode = "view")
+
+tm_shape(all_combined_asian_elephant_coords_sf) +
+    tm_symbols(col = "black",
+               size = 0.2,
+               alpha = 0.75)
+
 ```
 

@@ -1,0 +1,189 @@
+Please find below the R code history from your *Wallace* v1.1.2 session.
+
+You can reproduce your session results by running this R Markdown file
+in RStudio.
+
+Each code block is called a “chunk”, and you can run them either
+one-by-one or all at once by choosing an option in the “Run” menu at the
+top-right corner of the “Source” pane in RStudio.
+
+For more detailed information see <http://rmarkdown.rstudio.com>).
+
+### Package installation
+
+Wallace uses the following R packages that must be installed and loaded
+before starting.
+
+```{r}
+library(spocc)
+library(spThin)
+library(dismo)
+library(rgeos)
+library(ENMeval)
+library(dplyr)
+```
+
+Wallace also includes several functions developed to help integrate
+different packages and some additional functionality. For this reason,
+it is necessary to load the file `functions.R`, The function
+`system.file()` finds this script, and `source()` loads it.
+
+```{r}
+source(system.file('shiny/funcs', 'functions.R', package = 'wallace'))
+```
+
+## Record of analysis for \*\*.
+
+User CSV path with occurrence data. If the CSV file is not in the
+current workspace, change to the correct file path
+(e.g. “/Users/darwin/Documents/occs.csv”).
+
+```{r}
+# NOTE: provide the path to the folder that contains the CSV file
+d.occs <- '/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Asian_Elephant'
+# create path to user occurrences csv file
+userOccs.path <- file.path(d.occs, "all_combined_asian_elephant_coords.csv")
+# read in csv
+userOccs.csv <- read.csv(userOccs.path, header = TRUE)
+# remove rows with duplicate coordinates
+occs.dups <- duplicated(userOccs.csv[c('longitude', 'latitude')])
+occs <- userOccs.csv[!occs.dups,]
+# remove NAs
+occs <- occs[complete.cases(occs$longitude, occs$latitude), ]
+# give all records a unique ID
+occs$occID <- row.names(occs)
+```
+
+### Obtain Environmental Data
+
+```{r}
+# NOTE: provide the path to the folder that contains the rasters
+d.envs <- '/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_masked_CHELSA_data'
+# create paths to the raster files
+userRas.paths <- file.path(d.envs, c('asia_masked_CHELSA_layer1.tif', 'asia_masked_CHELSA_layer2.tif', 'asia_masked_CHELSA_layer4.tif', 'asia_masked_CHELSA_layer6.tif', 'asia_masked_CHELSA_layer12.tif', 'asia_masked_CHELSA_layer15.tif'))
+# make a RasterStack out of the raster files
+envs <- raster::stack(userRas.paths)
+```
+
+### Process Environmental Data
+
+Background selection technique chosen as .
+
+User study extent name is indomalay_region. User study extent path is
+/var/folders/6m/gp95vp0954b0fd8q7200w3nm0000gn/T//RtmpySaqGI/43368c5ee2f24ce42332b6ad.
+Read in the .shp file and generate a Spatial Polygon object.
+
+```{r}
+# NOTE: provide the path to the folder that contains the shapefile
+d.bg <- '/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/indomalay_region'
+# read csv with coordinates for polygon
+bgExt <- rgdal::readOGR(d.bg, "indomalay_region")
+```
+
+Mask environmental variables by , and take a random sample of background
+values from the study extent. As the sample is random, your results may
+be different than those in the session. If there seems to be too much
+variability in these background samples, try increasing the number from
+10,000 to something higher (e.g. 50,000 or 100,000). The better your
+background sample, the less variability you’ll have between runs.
+
+```{r}
+# crop the environmental rasters by the background extent shape
+envsBgCrop <- raster::crop(envs, bgExt)
+# mask the background extent shape from the cropped raster
+envsBgMsk <- raster::mask(envsBgCrop, bgExt)
+# sample random background points
+bg.xy <- dismo::randomPoints(envsBgMsk, 10000)
+# convert matrix output to data frame
+bg.xy <- as.data.frame(bg.xy)  
+colnames(bg.xy) <- c("longitude", "latitude")
+```
+
+### Partition Occurrence Data
+
+Occurrence data is now partitioned for cross-validation, a method that
+iteratively builds a model on all but one group and evaluates that model
+on the left-out group.
+
+For example, if the data is partitioned into 3 groups A, B, and C, a
+model is first built with groups A and B and is evaluated on C. This is
+repeated by building a model with B and C and evaluating on A, and so on
+until all combinations are done.
+
+Cross-validation operates under the assumption that the groups are
+independent of each other, which may or may not be a safe assumption for
+your dataset. Spatial partitioning is one way to ensure more
+independence between groups.
+
+You selected to partition your occurrence data by the method.
+
+```{r}
+occs.xy <- occs[c('longitude', 'latitude')]
+group.data <- ENMeval::get.checkerboard2(occ = occs.xy, env = envsBgMsk,
+                                         bg = bg.xy, aggregation.factor = 2)
+```
+
+```{r}
+# pull out the occurrence and background partition group numbers from the list
+occs.grp <- group.data[[1]]
+bg.grp <- group.data[[2]]
+```
+
+### Build and Evaluate Niche Model
+
+You selected the maxent model.
+
+```{r}
+# define the vector of regularization multipliers to test
+rms <- seq(0.5, 1, 0.5)
+# iterate model building over all chosen parameter settings
+e <- ENMeval::ENMevaluate(occ = occs.xy, env = envsBgMsk, bg.coords = bg.xy,
+                          RMvalues = rms, fc = c('L', 'LQ'), method = 'user', 
+                          occ.grp = occs.grp, bg.grp = bg.grp, 
+                          clamp = TRUE, algorithm = "maxnet")
+
+# unpack the results data frame, the list of models, and the RasterStack of raw predictions
+evalTbl <- e@results
+evalMods <- e@models
+names(evalMods) <- e@tune.settings$tune.args
+evalPreds <- e@predictions
+```
+
+```{r}
+# view response curves for environmental variables with non-zero coefficients
+#plot(evalMods[["rm.0.5_fc.L"]], vars = c('asia_masked_CHELSA_layer1', 'asia_masked_CHELSA_layer2', 'asia_masked_CHELSA_layer4', 'asia_masked_CHELSA_layer6', 'asia_masked_CHELSA_layer12', 'asia_masked_CHELSA_layer15'), type = "cloglog")
+
+plot(evalMods[["rm.0.5_fc.L"]], type = "cloglog")
+plot(evalMods[["rm.0.5_fc.LQ"]], type = "cloglog")
+plot(evalMods[["rm.1_fc.L"]], type = "cloglog")
+plot(evalMods[["rm.1_fc.LQ"]], type = "cloglog")
+```
+
+```{r}
+# view ENMeval results
+ENMeval::evalplot.stats(e, stats = "auc.val", "rm", "fc")
+```
+
+```{r}
+# Select your model from the models list
+mod_0.5_LQ <- evalMods[["rm.0.5_fc.LQ"]]
+mod_0.5_L <- evalMods[["rm.0.5_fc.L"]]
+mod_1_LQ <- evalMods[["rm.1_fc.LQ"]]
+mod_1_L <- evalMods[["rm.0.5_fc.L"]]
+```
+
+```{r}
+# generate cloglog prediction
+pred_0.5_LQ <- predictMaxnet(mod_0.5_LQ, envsBgMsk, type = 'cloglog', clamp = TRUE) 
+pred_0.5_L <- predictMaxnet(mod_0.5_L, envsBgMsk, type = 'cloglog', clamp = TRUE) 
+pred_1_LQ <- predictMaxnet(mod_1_LQ, envsBgMsk, type = 'cloglog', clamp = TRUE) 
+pred_1_L <- predictMaxnet(mod_1_L, envsBgMsk, type = 'cloglog', clamp = TRUE) 
+```
+
+```{r}
+# plot the model prediction
+plot(pred_0.5_LQ)
+plot(pred_0.5_L)
+plot(pred_1_LQ)
+plot(pred_1_L)
+```
