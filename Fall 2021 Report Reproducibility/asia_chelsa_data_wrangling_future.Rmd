@@ -680,7 +680,7 @@ ukesm_2011_2040_370_crop <- terra::crop(ukesm_2011_2040_370_stack, indomalay_reg
 for (i in layers){
   r <- ukesm_2011_2040_370_crop[[i]]
   agg <- aggregate(r, fact = 5, fun = mean)
-  terra::writeRaster(agg, paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2011_2040/370/UKESM1_0_LL/mri_2011_2040_370_bio", i, ".tif"), overwrite = FALSE)
+  terra::writeRaster(agg, paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2011_2040/370/UKESM1_0_LL/ukesm1_2011_2040_370_bio", i, ".tif"), overwrite = FALSE)
 }
 ```
 
