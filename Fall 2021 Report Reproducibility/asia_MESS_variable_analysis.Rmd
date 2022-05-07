@@ -1,0 +1,115 @@
+---
+title: "Asia MESS Analysis"
+author: "Grace Kumaishi"
+date: "5/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dplyr)
+library(raster)
+library(modEvA)
+```
+
+```{r}
+# Call CHELSA data from Google Drive and stack aggregated CHELSA data
+
+chelsa_aggregated_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Data/Chelsa_Data/asia_masked_CHELSA_data/asia_masked_CHELSA_layer", c("01","02","04","06","07","12","14","15"), ".tif"))
+
+### Load thinned occurrence points
+
+thinned_all_spp_occs_xy <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/thinned_occs.csv")
+
+### Load subspecies coords
+
+all_subspecies_coords <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/all_subspecies_coords.csv")
+
+# need just lat/long values in two columns to use raster extract
+thinned_all_spp_occs_xy <- all_subspecies_coords[c('longitude', 'latitude')]
+
+# extracting values
+thinned_all_species_extract <- raster::extract(chelsa_aggregated_stack, thinned_all_spp_occs_xy)
+
+# save as dataframe
+write.csv(thinned_all_species_extract, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/historic_extract.csv", row.names = TRUE)
+```
+
+```{r}
+### Load in historic dataframe and edit column names
+
+historic <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/historic_extract.csv")
+
+historic <- historic %>% 
+  subset(select = -X) %>% 
+  rename(chelsa01 = asia_masked_CHELSA_layer01) %>% 
+  rename(chelsa02 = asia_masked_CHELSA_layer02) %>% 
+  rename(chelsa04 = asia_masked_CHELSA_layer04) %>% 
+  rename(chelsa06 = asia_masked_CHELSA_layer06) %>% 
+  rename(chelsa07 = asia_masked_CHELSA_layer07) %>% 
+  rename(chelsa12 = asia_masked_CHELSA_layer12) %>% 
+  rename(chelsa14 = asia_masked_CHELSA_layer14) %>% 
+  rename(chelsa15 = asia_masked_CHELSA_layer15)
+
+write.csv(historic, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/historic_extract_updated_names.csv", row.names = TRUE)
+```
+
+####### 2071-2100 #######
+
+#### 585 ####
+### GFDL_ESM4 ###
+
+```{r}
+### Call Chelsa Data 
+gfdl_2071_2100_585_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2071_2100/585/GFDL_ESM4/gfdl_2071_2100_585_bio", c("1","2","4","6","7","12","14","15"), ".tif"))
+
+# Extract values
+gfdl_2071_2100_585_extract <- raster::extract(gfdl_2071_2100_585_stack, thinned_all_spp_occs_xy)
+
+# save as dataframe
+write.csv(gfdl_2071_2100_585_extract, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/GFDL_ESM4/gfdl_2071_2100_585_extract.csv", row.names = TRUE)
+```
+
+```{r}
+### Load in dataframe and edit column names
+
+gfdl_2071_2100_585 <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/GFDL_ESM4/gfdl_2071_2100_585_extract.csv")
+
+gfdl_2071_2100_585 <- gfdl_2071_2100_585 %>% 
+  subset(select = -X) %>% 
+  rename(chelsa01 = gfdl_2071_2100_585_bio1) %>% 
+  rename(chelsa02 = gfdl_2071_2100_585_bio2) %>% 
+  rename(chelsa04 = gfdl_2071_2100_585_bio4) %>% 
+  rename(chelsa06 = gfdl_2071_2100_585_bio6) %>% 
+  rename(chelsa07 = gfdl_2071_2100_585_bio7) %>% 
+  rename(chelsa12 = gfdl_2071_2100_585_bio12) %>% 
+  rename(chelsa14 = gfdl_2071_2100_585_bio14) %>% 
+  rename(chelsa15 = gfdl_2071_2100_585_bio15)
+
+write.csv(gfdl_2071_2100_585, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/GFDL_ESM4/gfdl_2071_2100_585_extract_updated_names.csv", row.names = TRUE)
+```
+
+```{r}
+### Run MESS
+MESS(historic, gfdl_2071_2100_585)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
