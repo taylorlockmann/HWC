@@ -93,8 +93,172 @@ write.csv(gfdl_2071_2100_585, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-
 
 ```{r}
 ### Run MESS
-MESS(historic, gfdl_2071_2100_585)
+gfdl_2071_2100_585_MESS <- MESS(historic, gfdl_2071_2100_585)
+
+gfdl_2071_2100_585_MESS
 ```
+
+#### 585 ####
+### IPSL_CM6A_LR ###
+
+```{r}
+### Call Chelsa Data 
+ipsl_2071_2100_585_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2071_2100/585/IPSL_CM6A_LR/ipsl_2071_2100_585_bio", c("1","2","4","6","7","12","14","15"), ".tif"))
+
+# Extract values
+ipsl_2071_2100_585_extract <- raster::extract(ipsl_2071_2100_585_stack, thinned_all_spp_occs_xy)
+
+# save as dataframe
+write.csv(ipsl_2071_2100_585_extract, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/IPSL_CM6A_LR/ipsl_2071_2100_585_extract.csv", row.names = TRUE)
+```
+
+```{r}
+### Load in dataframe and edit column names
+
+ipsl_2071_2100_585 <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/IPSL_CM6A_LR/ipsl_2071_2100_585_extract.csv")
+
+ipsl_2071_2100_585 <- ipsl_2071_2100_585 %>% 
+  subset(select = -X) %>% 
+  rename(chelsa01 = ipsl_2071_2100_585_bio1) %>% 
+  rename(chelsa02 = ipsl_2071_2100_585_bio2) %>% 
+  rename(chelsa04 = ipsl_2071_2100_585_bio4) %>% 
+  rename(chelsa06 = ipsl_2071_2100_585_bio6) %>% 
+  rename(chelsa07 = ipsl_2071_2100_585_bio7) %>% 
+  rename(chelsa12 = ipsl_2071_2100_585_bio12) %>% 
+  rename(chelsa14 = ipsl_2071_2100_585_bio14) %>% 
+  rename(chelsa15 = ipsl_2071_2100_585_bio15)
+
+write.csv(ipsl_2071_2100_585, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/IPSL_CM6A_LR/ipsl_2071_2100_585_extract_updated_names.csv", row.names = TRUE)
+```
+
+```{r}
+### Run MESS
+ipsl_2071_2100_585_MESS <- MESS(historic, ipsl_2071_2100_585)
+
+ipsl_2071_2100_585_MESS
+```
+
+#### 585 ####
+### MPI_ESM1_2_HR ###
+
+```{r}
+### Call Chelsa Data 
+mpi_2071_2100_585_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2071_2100/585/MPI_ESM1_2_HR/mpi_2071_2100_585_bio", c("1","2","4","6","7","12","14","15"), ".tif"))
+
+# Extract values
+mpi_2071_2100_585_extract <- raster::extract(mpi_2071_2100_585_stack, thinned_all_spp_occs_xy)
+
+# save as dataframe
+write.csv(mpi_2071_2100_585_extract, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/MPI_ESM1_2_HR/mpi_2071_2100_585_extract.csv", row.names = TRUE)
+```
+
+```{r}
+### Load in dataframe and edit column names
+
+mpi_2071_2100_585 <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/MPI_ESM1_2_HR/mpi_2071_2100_585_extract.csv")
+
+mpi_2071_2100_585 <- mpi_2071_2100_585 %>% 
+  subset(select = -X) %>% 
+  rename(chelsa01 = mpi_2071_2100_585_bio1) %>% 
+  rename(chelsa02 = mpi_2071_2100_585_bio2) %>% 
+  rename(chelsa04 = mpi_2071_2100_585_bio4) %>% 
+  rename(chelsa06 = mpi_2071_2100_585_bio6) %>% 
+  rename(chelsa07 = mpi_2071_2100_585_bio7) %>% 
+  rename(chelsa12 = mpi_2071_2100_585_bio12) %>% 
+  rename(chelsa14 = mpi_2071_2100_585_bio14) %>% 
+  rename(chelsa15 = mpi_2071_2100_585_bio15)
+
+write.csv(mpi_2071_2100_585, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/MPI_ESM1_2_HR/mpi_2071_2100_585_extract_updated_names.csv", row.names = TRUE)
+```
+
+```{r}
+### Run MESS
+mpi_2071_2100_585_MESS <- MESS(historic, mpi_2071_2100_585)
+
+mpi_2071_2100_585_MESS
+```
+
+#### 585 ####
+### MRI_ESM2_0 ###
+
+```{r}
+### Call Chelsa Data 
+mri_2071_2100_585_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2071_2100/585/MRI_ESM2_0/mri_2071_2100_585_bio", c("1","2","4","6","7","12","14","15"), ".tif"))
+
+# Extract values
+mri_2071_2100_585_extract <- raster::extract(mri_2071_2100_585_stack, thinned_all_spp_occs_xy)
+
+# save as dataframe
+write.csv(mri_2071_2100_585_extract, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/MRI_ESM2_0/mri_2071_2100_585_extract.csv", row.names = TRUE)
+```
+
+```{r}
+### Load in dataframe and edit column names
+
+mri_2071_2100_585 <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/MRI_ESM2_0/mri_2071_2100_585_extract.csv")
+
+mri_2071_2100_585 <- mri_2071_2100_585 %>% 
+  subset(select = -X) %>% 
+  rename(chelsa01 = mri_2071_2100_585_bio1) %>% 
+  rename(chelsa02 = mri_2071_2100_585_bio2) %>% 
+  rename(chelsa04 = mri_2071_2100_585_bio4) %>% 
+  rename(chelsa06 = mri_2071_2100_585_bio6) %>% 
+  rename(chelsa07 = mri_2071_2100_585_bio7) %>% 
+  rename(chelsa12 = mri_2071_2100_585_bio12) %>% 
+  rename(chelsa14 = mri_2071_2100_585_bio14) %>% 
+  rename(chelsa15 = mri_2071_2100_585_bio15)
+
+write.csv(mri_2071_2100_585, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/MRI_ESM2_0/mri_2071_2100_585_extract_updated_names.csv", row.names = TRUE)
+```
+
+```{r}
+### Run MESS
+mri_2071_2100_585_MESS <- MESS(historic, mri_2071_2100_585)
+
+mri_2071_2100_585_MESS
+```
+
+#### 585 ####
+### UKESM1_0_LL ###
+
+```{r}
+### Call Chelsa Data 
+ukesm_2071_2100_585_stack <- stack(paste0("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/R_files/R_output_data/chelsa_asia/2071_2100/585/UKESM1_0_LL/ukesm_2071_2100_585_bio", c("1","2","4","6","7","12","14","15"), ".tif"))
+
+# Extract values
+ukesm_2071_2100_585_extract <- raster::extract(ukesm_2071_2100_585_stack, thinned_all_spp_occs_xy)
+
+# save as dataframe
+write.csv(ukesm_2071_2100_585_extract, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/UKESM1_0_LL/ukesm_2071_2100_585_extract.csv", row.names = TRUE)
+```
+
+```{r}
+### Load in dataframe and edit column names
+
+ukesm_2071_2100_585 <- read.csv(file = "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/UKESM1_0_LL/ukesm_2071_2100_585_extract.csv")
+
+ukesm_2071_2100_585 <- ukesm_2071_2100_585 %>% 
+  subset(select = -X) %>% 
+  rename(chelsa01 = ukesm_2071_2100_585_bio1) %>% 
+  rename(chelsa02 = ukesm_2071_2100_585_bio2) %>% 
+  rename(chelsa04 = ukesm_2071_2100_585_bio4) %>% 
+  rename(chelsa06 = ukesm_2071_2100_585_bio6) %>% 
+  rename(chelsa07 = ukesm_2071_2100_585_bio7) %>% 
+  rename(chelsa12 = ukesm_2071_2100_585_bio12) %>% 
+  rename(chelsa14 = ukesm_2071_2100_585_bio14) %>% 
+  rename(chelsa15 = ukesm_2071_2100_585_bio15)
+
+write.csv(ukesm_2071_2100_585, "/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Asia_MESS_analysis/input_dataframes/2071_2100/585/UKESM1_0_LL/ukesm_2071_2100_585_extract_updated_names.csv", row.names = TRUE)
+```
+
+```{r}
+### Run MESS
+ukesm_2071_2100_585_MESS <- MESS(historic, ukesm_2071_2100_585)
+
+ukesm_2071_2100_585_MESS
+```
+
+
 
 
 
