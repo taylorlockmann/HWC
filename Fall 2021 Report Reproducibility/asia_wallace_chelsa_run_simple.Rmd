@@ -194,7 +194,7 @@ plot(pred)
 #points(occs.xy$longitude, occs.xy$latitude, col = "black")
 
 # save as raster
-# lion_historic_10p_sdm <- writeRaster(pred_thr, filename = file.path("H:/My Drive/HWC_data/Wallace SDM Rasters/1981_2010/lion_historic_10p_sdm.tif"), overwrite = FALSE)
+asian_elephant_historic_10p_sdm <- writeRaster(pred_thr, filename = file.path("/Volumes/GoogleDrive/.shortcut-targets-by-id/1YB-Hz3L-kWyiZMg2UM89GQkvqXyZUW1H/HWC_data/Wallace SDM Rasters/asia/1981_2010/asian_elephant_historic_10p_sdm.tif"), overwrite = FALSE)
 ```
 
 ### Project Niche Model to New Time
